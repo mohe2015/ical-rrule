@@ -1,4 +1,8 @@
-use nom::{IResult, bytes::complete::{is_not, tag, take_while1}, character::is_alphanumeric, multi::many0};
+use nom::{
+    bytes::complete::{is_not, tag, take_till, take_till1, take_while1},
+    multi::many0,
+    IResult,
+};
 
 pub fn constant_rrule(input: &str) -> IResult<&str, &str> {
     tag("RRULE")(input)
@@ -22,11 +26,25 @@ pub fn other_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
 
 pub fn iana_token(input: &str) -> IResult<&str, &str> {
     // https://datatracker.ietf.org/doc/html/rfc5234
+    take_till(|c: char| {
+        (char::from(0x00) <= c && c <= char::from(0x08))
+            || (char::from(0x0a) <= c && c <= char::from(0x1f))
+            || c == char::from(0x7f)
+            || c == ';'
+            || c == ':'
+            || c == ','
+            || c == '"'
+    })(input)
+}
+
+pub fn paramtext(input: &str) -> IResult<&str, &str> {
     take_while1(|c: char| c.is_ascii_alphanumeric() || c == '-')(input)
 }
 
+pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
+
 pub fn param_value(input: &str) -> IResult<&str, &str> {
-    
+    nom::branch::alt((paramtext, quoted_string))(input)
 }
 
 pub fn iana_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
@@ -38,25 +56,45 @@ pub fn iana_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
 
 #[cfg(test)]
 mod tests {
-    use nom::{IResult, error::ErrorKind};
+    use nom::{error::ErrorKind, IResult};
 
     use crate::parser::{constant_rrule, rrulparam, rrulparams};
 
     #[test]
-    fn it_works() {        
+    fn it_works() {
         assert_eq!(constant_rrule("RRULE"), IResult::Ok(("", "RRULE")));
-        assert_eq!(constant_rrule("NOTRRULE"), Err(nom::Err::Error(nom::error::Error { input: "NOTRRULE", code: ErrorKind::Tag })));
-        assert_eq!(constant_rrule("RRULEEXTENDED"), IResult::Ok(("EXTENDED", "RRULE")));
+        assert_eq!(
+            constant_rrule("NOTRRULE"),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "NOTRRULE",
+                code: ErrorKind::Tag
+            }))
+        );
+        assert_eq!(
+            constant_rrule("RRULEEXTENDED"),
+            IResult::Ok(("EXTENDED", "RRULE"))
+        );
 
         assert_eq!(rrulparam(";test"), IResult::Ok(("", "test")));
-        assert_eq!(rrulparam(""), Err(nom::Err::Error(nom::error::Error { input: "", code: ErrorKind::Tag })));
+        assert_eq!(
+            rrulparam(""),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "",
+                code: ErrorKind::Tag
+            }))
+        );
         assert_eq!(rrulparam(";test;"), IResult::Ok((";", "test")));
 
         assert_eq!(rrulparams(""), IResult::Ok(("", vec![])));
         assert_eq!(rrulparams("nothing"), IResult::Ok(("nothing", vec![])));
         assert_eq!(rrulparams(";test"), IResult::Ok(("", vec!["test"])));
-        assert_eq!(rrulparams(";test;test2"), IResult::Ok(("", vec!["test", "test2"])));
-        assert_eq!(rrulparams(";test;test2;"), IResult::Ok((";", vec!["test", "test2"])));
+        assert_eq!(
+            rrulparams(";test;test2"),
+            IResult::Ok(("", vec!["test", "test2"]))
+        );
+        assert_eq!(
+            rrulparams(";test;test2;"),
+            IResult::Ok((";", vec!["test", "test2"]))
+        );
     }
 }
-
