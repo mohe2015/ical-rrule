@@ -1,8 +1,12 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-}
+pub mod parser;
+
+
+// https://github.com/Geal/nom/blob/master/doc/choosing_a_combinator.md
+
+// https://crates.io/crates/pest
+// https://crates.io/crates/peg
+// https://crates.io/crates/lalrpop
+
+
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.10
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5
