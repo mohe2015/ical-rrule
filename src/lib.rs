@@ -11,3 +11,5 @@ pub mod parser;
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.10
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+
+// https://datatracker.ietf.org/doc/html/rfc5234

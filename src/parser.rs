@@ -1,4 +1,4 @@
-use nom::{IResult, bytes::complete::{is_not, tag}, multi::many0};
+use nom::{IResult, bytes::complete::{is_not, tag, take_while1}, character::is_alphanumeric, multi::many0};
 
 pub fn constant_rrule(input: &str) -> IResult<&str, &str> {
     tag("RRULE")(input)
@@ -12,6 +12,28 @@ pub fn rrulparam(input: &str) -> IResult<&str, &str> {
 
 pub fn rrulparams(input: &str) -> IResult<&str, Vec<&str>> {
     many0(rrulparam)(input) // TODO FIXME parse "other_param ="
+}
+
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.2
+pub fn other_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
+    iana_param(input)
+    // TODO FIXME maybe support x_param
+}
+
+pub fn iana_token(input: &str) -> IResult<&str, &str> {
+    // https://datatracker.ietf.org/doc/html/rfc5234
+    take_while1(|c: char| c.is_ascii_alphanumeric() || c == '-')(input)
+}
+
+pub fn param_value(input: &str) -> IResult<&str, &str> {
+    
+}
+
+pub fn iana_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
+    let (input, iana_token) = iana_token(input)?;
+    let (input, _) = tag("=")(input)?;
+    let (input, param_values) = many0(param_value)(input)?;
+    Ok((input, (iana_token, param_values)))
 }
 
 #[cfg(test)]
