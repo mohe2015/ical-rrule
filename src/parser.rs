@@ -1,5 +1,5 @@
 use nom::{
-    bytes::complete::{is_not, tag, take_till, take_till1, take_while1},
+    bytes::complete::{is_not, tag, take_till, take_while1},
     multi::many0,
     IResult,
 };
@@ -41,10 +41,11 @@ pub fn paramtext(input: &str) -> IResult<&str, &str> {
     take_while1(|c: char| c.is_ascii_alphanumeric() || c == '-')(input)
 }
 
-pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
+//pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
 
 pub fn param_value(input: &str) -> IResult<&str, &str> {
-    nom::branch::alt((paramtext, quoted_string))(input)
+    paramtext(input)
+    //nom::branch::alt((paramtext, quoted_string))(input)
 }
 
 pub fn iana_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {

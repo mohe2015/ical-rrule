@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-ln -s ../../pre-commit.sh .git/hooks/pre-commit
+set -ex
 
-set -e
-
+ln -sf ../../pre-commit.sh .git/hooks/pre-commit
+export RUSTFLAGS="-D warnings"
 cargo fmt -- --check
-cargo check
+cargo build
 cargo clippy
+cargo test
