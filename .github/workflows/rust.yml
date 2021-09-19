@@ -23,7 +23,9 @@ jobs:
           toolchain: nightly
           profile: minimal
           override: true
-          components: rustfmt, clippy
+          components: rustfmt, clippy, llvm-tools-preview
+    - name: Cargo install
+      run: cargo install cargo-binutils
     - name: Run cargo fmt
       run: cargo fmt -- --check
     - uses: actions-rs/clippy-check@v1
@@ -40,5 +42,9 @@ jobs:
       env:
         RUSTFLAGS: '-Z instrument-coverage'
       run: cargo test
+    - name: cargo profdata
+      run: cargo profdata -- merge -sparse default.profraw -o default.profdata
     - name: coverage
       run: cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21 --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+    - name: coverage summary
+      run: cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21
