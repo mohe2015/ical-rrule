@@ -19,6 +19,7 @@ cargo cov -- show --format=html --use-color --ignore-filename-regex='/.cargo/reg
 firefox target/debug/coverage/index.html
 cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-*
 
-#~/.cargo/bin/grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+~/.cargo/bin/grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/grcov/
+firefox target/debug/grcov/index.html
 
 cargo audit
