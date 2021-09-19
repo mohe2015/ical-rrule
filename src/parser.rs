@@ -1,6 +1,8 @@
+use chrono::{DateTime, FixedOffset};
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_till, take_while1},
+    bytes::complete::{tag, take, take_till, take_while1},
+    error::ErrorKind,
     multi::{many0, separated_list1},
     IResult,
 };
@@ -64,7 +66,7 @@ pub enum Frequency {
     Yearly,
 }
 
-pub fn freq_element<'a>(
+pub const fn freq_element<'a>(
     string: &'static str,
     enum_element: Frequency,
 ) -> impl FnMut(&'a str) -> IResult<&'a str, Frequency> {
@@ -85,6 +87,26 @@ pub fn freq(input: &str) -> IResult<&str, Frequency> {
         freq_element("YEARLY", Frequency::Yearly),
     ))(input)
 }
+
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4
+pub fn date(input: &str) -> IResult<&str, DateTime<FixedOffset>> {
+    let (input, value) = take(8u32)(input)?;
+
+    // https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html#specifiers
+    match DateTime::parse_from_str(value, "%Y%m%d") {
+        Ok(datetime) => Ok((input, datetime)),
+        Err(_) => Err(nom::Err::Error(nom::error::Error {
+            input, // TODO FIXME
+            code: ErrorKind::Fail,
+        })),
+    }
+    //let b = Utc.datetime_from_str(value, "%Y%m%d")?;
+}
+
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5
+pub fn datetime(input: &str) -> IResult<&str, Frequency> {}
+
+pub fn enddate(input: &str) -> IResult<&str, Frequency> {}
 
 // recur-rule-part
 
