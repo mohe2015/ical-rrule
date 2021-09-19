@@ -50,3 +50,10 @@ jobs:
       run: cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-* --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
     - name: coverage summary
       run: cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-*
+    - name: coverage html
+      run: cargo cov -- show --format=html --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-* --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+    - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: target/debug/coverage
