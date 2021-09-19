@@ -1,0 +1,41 @@
+{
+  description = "ical-rrule's flake";
+
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem
+      (system:
+        let pkgs = nixpkgs.legacyPackages.${system}; in
+        {
+          devShell = pkgs.mkShell {
+            nativeBuildInputs = [
+              pkgs.bashInteractive # fix nested shells
+              pkgs.pkg-config
+            ];
+
+            buildInputs = [
+              pkgs.openssl
+            ];
+          };
+
+          packages = rec {
+            ical-rrule = pkgs.rustPlatform.buildRustPackage rec {
+              pname = "ical-rrule";
+              version = "0.1.0";
+              src = pkgs.nix-gitignore.gitignoreSource [ ./.gitignore "flake.nix" "result" ] ./.;
+
+              nativeBuildInputs = [ pkgs.pkg-config ];
+              buildInputs = [
+                pkgs.openssl
+              ];
+
+              cargoLock = {
+                lockFile = ./Cargo.lock;
+              };
+            };
+          };
+        }
+      );
+}
