@@ -16,11 +16,10 @@ cargo test
 cargo clean # needed to find out the object later
 RUSTFLAGS="-Z instrument-coverage" cargo test
 cargo profdata -- merge -sparse default.profraw -o default.profdata
-cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21
 cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21 --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
-
 cargo cov -- show --format=html --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21 --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
-firefox target/debug/coverage/index.html 
+firefox target/debug/coverage/index.html
+cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21
 
 #~/.cargo/bin/grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
 

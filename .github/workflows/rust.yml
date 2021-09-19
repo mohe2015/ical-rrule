@@ -25,7 +25,7 @@ jobs:
           override: true
           components: rustfmt, clippy, llvm-tools-preview
     - name: Cargo install
-      run: cargo install cargo-binutils
+      run: cargo install cargo-binutils rustfilt
     - name: Run cargo fmt
       run: cargo fmt -- --check
     - uses: actions-rs/clippy-check@v1
