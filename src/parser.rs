@@ -58,7 +58,9 @@ pub fn rrulparams(input: &str) -> IResult<&str, Vec<(&str, Vec<&str>)>> {
 mod tests {
     use nom::{error::ErrorKind, IResult};
 
-    use crate::parser::{constant_rrule, iana_param, iana_token, param_value, paramtext};
+    use crate::parser::{
+        constant_rrule, iana_param, iana_token, other_param, param_value, paramtext, rrulparams,
+    };
 
     #[test]
     fn it_works() {
@@ -96,33 +98,42 @@ mod tests {
             IResult::Ok(("", "133THIS-IS-a-010-IAnATokn"))
         );
 
-        assert_eq!(paramtext(""), IResult::Ok(("", "")));
-        assert_eq!(paramtext("ä"), IResult::Ok(("", "ä")));
-        assert_eq!(paramtext("耳"), IResult::Ok(("", "耳")));
-        assert_eq!(paramtext("\""), IResult::Ok(("\"", "")));
+        for fun in [paramtext, param_value] {
+            assert_eq!(fun(""), IResult::Ok(("", "")));
+            assert_eq!(fun("ä"), IResult::Ok(("", "ä")));
+            assert_eq!(fun("耳ä"), IResult::Ok(("", "耳ä")));
+            assert_eq!(fun("\""), IResult::Ok(("\"", "")));
+        }
 
-        // TODO FIXME
-        assert_eq!(param_value(""), IResult::Ok(("", "")));
-        assert_eq!(param_value("ä"), IResult::Ok(("", "ä")));
-        assert_eq!(param_value("耳ä"), IResult::Ok(("", "耳ä")));
-        assert_eq!(param_value("\""), IResult::Ok(("\"", "")));
+        for fun in [iana_param, other_param] {
+            assert_eq!(fun("TEST=1"), IResult::Ok(("", ("TEST", vec!["1"]))));
+            assert_eq!(
+                fun("1-tEST=ädf,üsldifh"),
+                IResult::Ok(("", ("1-tEST", vec!["ädf", "üsldifh"])))
+            );
+            assert_eq!(fun("TEST="), IResult::Ok(("", ("TEST", vec![""]))));
+            assert_eq!(
+                fun("TEST=,,1,,"),
+                IResult::Ok(("", ("TEST", vec!["", "", "1", "", ""])))
+            );
+            assert_eq!(
+                fun("TEST"),
+                Err(nom::Err::Error(nom::error::Error {
+                    input: "",
+                    code: ErrorKind::Tag
+                }))
+            );
+        }
 
-        assert_eq!(iana_param("TEST=1"), IResult::Ok(("", ("TEST", vec!["1"]))));
+        assert_eq!(rrulparams(""), IResult::Ok(("", vec![])));
         assert_eq!(
-            iana_param("1-tEST=ädf,üsldifh"),
-            IResult::Ok(("", ("1-tEST", vec!["ädf", "üsldifh"])))
-        );
-        assert_eq!(iana_param("TEST="), IResult::Ok(("", ("TEST", vec![""]))));
-        assert_eq!(
-            iana_param("TEST=,,1,,"),
-            IResult::Ok(("", ("TEST", vec!["", "", "1", "", ""])))
+            rrulparams(";TEST=1"),
+            IResult::Ok(("", vec![("TEST", vec!["1"])]))
         );
         assert_eq!(
-            iana_param("TEST"),
-            Err(nom::Err::Error(nom::error::Error {
-                input: "",
-                code: ErrorKind::Tag
-            }))
+            rrulparams(";TEST=1,2;TEST=3,4"),
+            IResult::Ok(("", vec![("TEST", vec!["1", "2"]), ("TEST", vec!["3", "4"])]))
         );
+        assert_eq!(rrulparams(";"), IResult::Ok((";", vec![])));
     }
 }
