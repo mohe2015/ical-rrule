@@ -40,9 +40,5 @@ jobs:
       env:
         RUSTFLAGS: '-Z instrument-coverage'
       run: cargo test
-    - uses: actions-rs/grcov@v0.1
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ${{ steps.coverage.outputs.report }}
+    - name: coverage
+      run: cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21 --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt

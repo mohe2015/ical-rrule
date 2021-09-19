@@ -59,7 +59,7 @@ pub fn iana_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
 mod tests {
     use nom::{error::ErrorKind, IResult};
 
-    use crate::parser::{constant_rrule, rrulparam, rrulparams};
+    use crate::parser::{constant_rrule, iana_token, rrulparam, rrulparams};
 
     #[test]
     fn it_works() {
@@ -97,5 +97,7 @@ mod tests {
             rrulparams(";test;test2;"),
             IResult::Ok((";", vec!["test", "test2"]))
         );
+
+        assert_eq!(iana_token(";"), IResult::Ok((";", "")));
     }
 }
