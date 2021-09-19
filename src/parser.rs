@@ -1,6 +1,6 @@
 use nom::{
     bytes::complete::{tag, take_till, take_while1},
-    multi::many0,
+    multi::{many0, separated_list1},
     IResult,
 };
 
@@ -33,7 +33,7 @@ pub fn param_value(input: &str) -> IResult<&str, &str> {
 pub fn iana_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
     let (input, iana_token) = iana_token(input)?;
     let (input, _) = tag("=")(input)?;
-    let (input, param_values) = many0(param_value)(input)?; // TODO FIXME separated
+    let (input, param_values) = separated_list1(tag(","), param_value)(input)?;
     Ok((input, (iana_token, param_values)))
 }
 
@@ -58,7 +58,7 @@ pub fn rrulparams(input: &str) -> IResult<&str, Vec<(&str, Vec<&str>)>> {
 mod tests {
     use nom::{error::ErrorKind, IResult};
 
-    use crate::parser::{constant_rrule, iana_token, param_value, paramtext};
+    use crate::parser::{constant_rrule, iana_param, iana_token, param_value, paramtext};
 
     #[test]
     fn it_works() {
@@ -107,26 +107,22 @@ mod tests {
         assert_eq!(param_value("耳ä"), IResult::Ok(("", "耳ä")));
         assert_eq!(param_value("\""), IResult::Ok(("\"", "")));
 
-        /*assert_eq!(rrulparam(";test"), IResult::Ok(("", "test")));
+        assert_eq!(iana_param("TEST=1"), IResult::Ok(("", ("TEST", vec!["1"]))));
         assert_eq!(
-            rrulparam(""),
+            iana_param("1-tEST=ädf,üsldifh"),
+            IResult::Ok(("", ("1-tEST", vec!["ädf", "üsldifh"])))
+        );
+        assert_eq!(iana_param("TEST="), IResult::Ok(("", ("TEST", vec![""]))));
+        assert_eq!(
+            iana_param("TEST=,,1,,"),
+            IResult::Ok(("", ("TEST", vec!["", "", "1", "", ""])))
+        );
+        assert_eq!(
+            iana_param("TEST"),
             Err(nom::Err::Error(nom::error::Error {
                 input: "",
                 code: ErrorKind::Tag
             }))
         );
-        assert_eq!(rrulparam(";test;"), IResult::Ok((";", "test")));
-
-        assert_eq!(rrulparams(""), IResult::Ok(("", vec![])));
-        assert_eq!(rrulparams("nothing"), IResult::Ok(("nothing", vec![])));
-        assert_eq!(rrulparams(";test"), IResult::Ok(("", vec!["test"])));
-        assert_eq!(
-            rrulparams(";test;test2"),
-            IResult::Ok(("", vec!["test", "test2"]))
-        );
-        assert_eq!(
-            rrulparams(";test;test2;"),
-            IResult::Ok((";", vec!["test", "test2"]))
-        );*/
     }
 }
