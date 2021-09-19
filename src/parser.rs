@@ -33,7 +33,7 @@ pub fn param_value(input: &str) -> IResult<&str, &str> {
 pub fn iana_param(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
     let (input, iana_token) = iana_token(input)?;
     let (input, _) = tag("=")(input)?;
-    let (input, param_values) = separated_list1(tag(","), param_value)(input)?;
+    let (input, param_values) = separated_list1(tag(","), param_value)(input).unwrap(); // shouldn't be able to panic as param_value can be empty. will need to fuzz.
     Ok((input, (iana_token, param_values)))
 }
 
