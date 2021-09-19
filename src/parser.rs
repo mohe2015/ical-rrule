@@ -1,4 +1,5 @@
 use nom::{
+    branch::alt,
     bytes::complete::{tag, take_till, take_while1},
     multi::{many0, separated_list1},
     IResult,
@@ -49,8 +50,45 @@ pub fn rrulparam(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
 }
 
 pub fn rrulparams(input: &str) -> IResult<&str, Vec<(&str, Vec<&str>)>> {
-    many0(rrulparam)(input) // TODO FIXME parse "other_param ="
+    many0(rrulparam)(input)
 }
+
+#[derive(Clone, Copy)]
+pub enum Frequency {
+    Secondly,
+    Minutely,
+    Hourly,
+    Daily,
+    Weekly,
+    Monthly,
+    Yearly,
+}
+
+pub fn freq_element<'a>(
+    string: &'static str,
+    enum_element: Frequency,
+) -> impl FnMut(&'a str) -> IResult<&'a str, Frequency> {
+    move |input| {
+        let (input, _) = tag(string)(input)?;
+        Ok((input, enum_element))
+    }
+}
+
+pub fn freq(input: &str) -> IResult<&str, Frequency> {
+    alt((
+        freq_element("SECONDLY", Frequency::Secondly),
+        freq_element("MINUTELY", Frequency::Minutely),
+        freq_element("HOURLY", Frequency::Hourly),
+        freq_element("DAILY", Frequency::Daily),
+        freq_element("WEEKLY", Frequency::Weekly),
+        freq_element("MONTHLY", Frequency::Monthly),
+        freq_element("YEARLY", Frequency::Yearly),
+    ))(input)
+}
+
+// recur-rule-part
+
+//recur
 
 //pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
 
