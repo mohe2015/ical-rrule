@@ -44,7 +44,9 @@ jobs:
       run: cargo test
     - name: cargo profdata
       run: cargo profdata -- merge -sparse default.profraw -o default.profdata
+    - name: clean
+      run: rm target/debug/deps/*.d
     - name: coverage
-      run: cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21 --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+      run: cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-* --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
     - name: coverage summary
-      run: cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-b2a70cd2ca5a8a21
+      run: cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-*
