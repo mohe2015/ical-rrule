@@ -25,8 +25,8 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: |
-          ~/.cargo/
-          ~/.rustup/
+          /usr/share/rust/.rustup/
+          /usr/share/rust/.cargo/
           target/
         key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}
     - name: Install latest nightly
