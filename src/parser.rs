@@ -353,5 +353,20 @@ mod tests {
                 RRuleDateOrDateTime::Date(NaiveDate::from_ymd(2021, 9, 20))
             ))
         );
+
+        // just for coverage
+        let a = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0));
+        let b = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1));
+        assert!(a.clone() != b);
+
+        let c = RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
+            NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0),
+        ));
+        let d = RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
+            NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1),
+        ));
+        assert!(c.clone() != d);
+
+        assert!(Frequency::Minutely.clone() == Frequency::Minutely);
     }
 }
