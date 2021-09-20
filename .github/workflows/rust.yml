@@ -28,7 +28,7 @@ jobs:
           ~/.cargo/
           ~/.rustup/
           target/
-        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('Cargo.lock') }}
+        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles("${GITHUB_WORKSPACE}/Cargo.lock") }}
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
