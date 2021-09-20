@@ -358,6 +358,7 @@ mod tests {
         let a = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0));
         let b = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1));
         assert!(a.clone() != b);
+        print!("{:?}", a);
 
         let c = RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
             NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0),
@@ -366,7 +367,9 @@ mod tests {
             NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1),
         ));
         assert!(c.clone() != d);
+        print!("{:?}", c);
 
         assert!(Frequency::Minutely.clone() == Frequency::Minutely);
+        print!("{:?}", Frequency::Minutely);
     }
 }
