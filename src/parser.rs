@@ -55,7 +55,7 @@ pub fn rrulparams(input: &str) -> IResult<&str, Vec<(&str, Vec<&str>)>> {
     many0(rrulparam)(input)
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Frequency {
     Secondly,
     Minutely,
@@ -179,7 +179,8 @@ mod tests {
     use nom::{error::ErrorKind, IResult};
 
     use crate::parser::{
-        constant_rrule, iana_param, iana_token, other_param, param_value, paramtext, rrulparams,
+        constant_rrule, freq, iana_param, iana_token, other_param, param_value, paramtext,
+        rrulparams, Frequency,
     };
 
     #[test]
@@ -255,5 +256,7 @@ mod tests {
             IResult::Ok(("", vec![("TEST", vec!["1", "2"]), ("TEST", vec!["3", "4"])]))
         );
         assert_eq!(rrulparams(";"), IResult::Ok((";", vec![])));
+
+        assert_eq!(freq("MINUTELY"), IResult::Ok(("", Frequency::Minutely)))
     }
 }
