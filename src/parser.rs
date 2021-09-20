@@ -321,5 +321,12 @@ mod tests {
                 code: ErrorKind::Fail
             }))
         );
+        assert_eq!(
+            datetime("2021092000000"),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "2021092000000",
+                code: ErrorKind::Fail
+            }))
+        );
     }
 }
