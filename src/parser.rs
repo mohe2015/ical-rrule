@@ -1,6 +1,9 @@
-use std::ops::Range;
+use std::{
+    num::{NonZeroU64, NonZeroU8},
+    ops::Range,
+};
 
-use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc, Weekday};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take, take_till, take_while1},
@@ -10,6 +13,39 @@ use nom::{
     multi::{many0, separated_list1},
     IResult,
 };
+
+pub enum RecurEnd {
+    Until(RRuleDateOrDateTime),
+    Count(NonZeroU64),
+}
+/*
+enum WeekdayRelative {
+    Plus,
+    Minus,
+    None
+}
+*/
+pub struct WeekdayNum {
+    //relative: WeekdayRelative,
+    ordwk: Option<i8>,
+    weekday: Weekday,
+}
+
+pub struct RecurRule {
+    freq: Frequency,
+    end: RecurEnd,
+    interval: NonZeroU64,
+    bysecond: Vec<u8>,
+    byminute: Vec<u8>,
+    byhour: Vec<u8>,
+    byday: Vec<WeekdayNum>,
+    bymonthday: Vec<i8>,
+    byyearday: Vec<i16>,
+    byweekno: Vec<i8>,
+    bymonth: Vec<NonZeroU8>,
+    bysetpos: Vec<i16>,
+    weekstart: Weekday,
+}
 
 pub fn constant_rrule(input: &str) -> IResult<&str, &str> {
     tag("RRULE")(input)
