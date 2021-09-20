@@ -1,8 +1,11 @@
+use std::ops::Range;
+
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take, take_till, take_while1},
     character::complete::digit1,
+    combinator::{map_res, verify},
     error::ErrorKind,
     multi::{many0, separated_list1},
     IResult,
@@ -176,17 +179,10 @@ pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {
 }
 
 // TODO FIXME this parser is not strictly correct in all cases namely when a shorter number would suffice
-pub fn digits(input: &str) -> IResult<&str, i64> {
-    let (input, value) = digit1(input)?;
-    Ok((
-        input,
-        value.parse().map_err(|_| {
-            nom::Err::Error(nom::error::Error {
-                input, // TODO FIXME
-                code: ErrorKind::TooLarge,
-            })
-        })?,
-    ))
+pub fn digits(range: Range<i64>, input: &str) -> IResult<&str, i64> {
+    verify(map_res(digit1, |v: &str| v.parse::<i64>()), |v: &i64| {
+        range.contains(v)
+    })(input)
 }
 
 // recur-rule-part
