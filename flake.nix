@@ -9,10 +9,15 @@
       (system:
         let pkgs = nixpkgs.legacyPackages.${system}; in
         {
-          devShell = pkgs.mkShell {
+          devShell = pkgs.mkShell.override { stdenv = pkgs.llvmPackages_12.stdenv; } {
             nativeBuildInputs = [
               pkgs.bashInteractive # fix nested shells
               pkgs.pkg-config
+              pkgs.gnumake
+              pkgs.llvmPackages_12.clang
+              pkgs.llvmPackages_12.llvm
+              pkgs.llvmPackages_12.llvm.dev
+              pkgs.llvmPackages_12.lld
             ];
 
             buildInputs = [
