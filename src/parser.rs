@@ -169,8 +169,8 @@ pub fn datetime(input: &str) -> IResult<&str, RRuleDateTime> {
 
 pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {
     alt((
-        |i| date(i).map(|o| (o.0, RRuleDateOrDateTime::Date(o.1))),
         |i| datetime(i).map(|o| (o.0, RRuleDateOrDateTime::DateTime(o.1))),
+        |i| date(i).map(|o| (o.0, RRuleDateOrDateTime::Date(o.1))),
     ))(input)
 }
 
@@ -186,8 +186,8 @@ mod tests {
     use nom::{error::ErrorKind, IResult};
 
     use crate::parser::{
-        constant_rrule, date, datetime, freq, iana_param, iana_token, other_param, param_value,
-        paramtext, rrulparams, Frequency, RRuleDateTime,
+        constant_rrule, date, datetime, enddate, freq, iana_param, iana_token, other_param,
+        param_value, paramtext, rrulparams, Frequency, RRuleDateOrDateTime, RRuleDateTime,
     };
 
     #[test]
@@ -322,11 +322,36 @@ mod tests {
             }))
         );
         assert_eq!(
-            datetime("2021092000000"),
+            datetime("20210920Q000000"),
             Err(nom::Err::Error(nom::error::Error {
-                input: "2021092000000",
+                input: "20210920Q000000",
                 code: ErrorKind::Fail
             }))
+        );
+
+        // TODO FIXME include in tests above
+        assert_eq!(
+            enddate(""),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "",
+                code: ErrorKind::Eof
+            }))
+        );
+        assert_eq!(
+            enddate("20210920T000000F"),
+            IResult::Ok((
+                "F",
+                RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
+                    NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0)
+                ))
+            ))
+        );
+        assert_eq!(
+            enddate("202109201"),
+            IResult::Ok((
+                "1",
+                RRuleDateOrDateTime::Date(NaiveDate::from_ymd(2021, 9, 20))
+            ))
         );
     }
 }
