@@ -103,12 +103,14 @@ pub fn date(input: &str) -> IResult<&str, NaiveDate> {
     //let b = Utc.datetime_from_str(value, "%Y%m%d")?;
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum RRuleDateTime {
     Utc(DateTime<Utc>),
     Unspecified(NaiveDateTime),
     Offset(DateTime<FixedOffset>),
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum RRuleDateOrDateTime {
     Date(NaiveDate),
     DateTime(RRuleDateTime),
@@ -128,7 +130,7 @@ fn datetime_utc(input: &str) -> IResult<&str, RRuleDateTime> {
 }
 
 fn datetime_unspecified(input: &str) -> IResult<&str, RRuleDateTime> {
-    let (input, value) = take(16u32)(input)?;
+    let (input, value) = take(15u32)(input)?;
 
     // https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html#specifiers
     match NaiveDateTime::parse_from_str(value, "%Y%m%dT%H%M%S") {
@@ -140,8 +142,12 @@ fn datetime_unspecified(input: &str) -> IResult<&str, RRuleDateTime> {
     }
 }
 
-fn datetime_timezone(_input: &str) -> IResult<&str, RRuleDateTime> {
-    unimplemented!();
+fn datetime_timezone(input: &str) -> IResult<&str, RRuleDateTime> {
+    Err(nom::Err::Error(nom::error::Error {
+        input, // TODO FIXME
+        code: ErrorKind::Fail,
+    }))
+    //unimplemented!();
     /*let (input, value) = take(16u32)(input)?;
 
     // TZID=America/New_York:19980119T020000
@@ -176,11 +182,12 @@ pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {
 
 #[cfg(test)]
 mod tests {
+    use chrono::{DateTime, NaiveDate, Utc};
     use nom::{error::ErrorKind, IResult};
 
     use crate::parser::{
-        constant_rrule, freq, iana_param, iana_token, other_param, param_value, paramtext,
-        rrulparams, Frequency,
+        constant_rrule, date, datetime, freq, iana_param, iana_token, other_param, param_value,
+        paramtext, rrulparams, Frequency, RRuleDateTime,
     };
 
     #[test]
@@ -257,6 +264,62 @@ mod tests {
         );
         assert_eq!(rrulparams(";"), IResult::Ok((";", vec![])));
 
-        assert_eq!(freq("MINUTELY"), IResult::Ok(("", Frequency::Minutely)))
+        assert_eq!(freq("MINUTELY"), IResult::Ok(("", Frequency::Minutely)));
+        assert_eq!(freq("MINUTELYY"), IResult::Ok(("Y", Frequency::Minutely)));
+        assert_eq!(
+            freq("MINUTEL"),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "MINUTEL",
+                code: ErrorKind::Tag
+            }))
+        );
+
+        assert_eq!(
+            date("20210920"),
+            IResult::Ok(("", NaiveDate::from_ymd(2021, 9, 20)))
+        );
+        assert_eq!(
+            date("202109201"),
+            IResult::Ok(("1", NaiveDate::from_ymd(2021, 9, 20)))
+        );
+        assert_eq!(
+            date("20210a920"),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "0",
+                code: ErrorKind::Fail
+            }))
+        );
+        assert_eq!(
+            date("2021"),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "2021",
+                code: ErrorKind::Eof
+            }))
+        );
+
+        assert_eq!(
+            datetime("20210920T000000F"),
+            IResult::Ok((
+                "F",
+                RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0))
+            ))
+        );
+        assert_eq!(
+            datetime("20210920T000000Z"),
+            IResult::Ok((
+                "",
+                RRuleDateTime::Utc(DateTime::from_utc(
+                    NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0),
+                    Utc
+                ))
+            ))
+        );
+        assert_eq!(
+            datetime("20210920T00000"),
+            Err(nom::Err::Error(nom::error::Error {
+                input: "20210920T00000",
+                code: ErrorKind::Fail
+            }))
+        );
     }
 }
