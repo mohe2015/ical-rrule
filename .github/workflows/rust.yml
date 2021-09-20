@@ -17,13 +17,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Get Date
+      id: get-date
+      run: |
+        echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
+      shell: bash
     - uses: actions/cache@v2
       with:
         path: |
           ~/.cargo/
           ~/.rustup/
           target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('Cargo.lock') }}
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
