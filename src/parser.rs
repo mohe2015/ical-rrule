@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take, take_till, take_while1},
@@ -89,11 +89,11 @@ pub fn freq(input: &str) -> IResult<&str, Frequency> {
 }
 
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4
-pub fn date(input: &str) -> IResult<&str, DateTime<FixedOffset>> {
+pub fn date(input: &str) -> IResult<&str, NaiveDate> {
     let (input, value) = take(8u32)(input)?;
 
     // https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html#specifiers
-    match DateTime::parse_from_str(value, "%Y%m%d") {
+    match NaiveDate::parse_from_str(value, "%Y%m%d") {
         Ok(datetime) => Ok((input, datetime)),
         Err(_) => Err(nom::Err::Error(nom::error::Error {
             input, // TODO FIXME
@@ -103,10 +103,70 @@ pub fn date(input: &str) -> IResult<&str, DateTime<FixedOffset>> {
     //let b = Utc.datetime_from_str(value, "%Y%m%d")?;
 }
 
-// https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5
-pub fn datetime(input: &str) -> IResult<&str, Frequency> {}
+pub enum RRuleDateTime {
+    Utc(DateTime<Utc>),
+    Unspecified(NaiveDateTime),
+    Offset(DateTime<FixedOffset>),
+}
 
-pub fn enddate(input: &str) -> IResult<&str, Frequency> {}
+pub enum RRuleDateOrDateTime {
+    Date(NaiveDate),
+    DateTime(RRuleDateTime),
+}
+
+fn datetime_utc(input: &str) -> IResult<&str, RRuleDateTime> {
+    let (input, value) = take(16u32)(input)?;
+
+    // https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html#specifiers
+    match Utc.datetime_from_str(value, "%Y%m%dT%H%M%SZ") {
+        Ok(datetime) => Ok((input, RRuleDateTime::Utc(datetime))),
+        Err(_) => Err(nom::Err::Error(nom::error::Error {
+            input, // TODO FIXME
+            code: ErrorKind::Fail,
+        })),
+    }
+}
+
+fn datetime_unspecified(input: &str) -> IResult<&str, RRuleDateTime> {
+    let (input, value) = take(16u32)(input)?;
+
+    // https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html#specifiers
+    match NaiveDateTime::parse_from_str(value, "%Y%m%dT%H%M%S") {
+        Ok(datetime) => Ok((input, RRuleDateTime::Unspecified(datetime))),
+        Err(_) => Err(nom::Err::Error(nom::error::Error {
+            input, // TODO FIXME
+            code: ErrorKind::Fail,
+        })),
+    }
+}
+
+fn datetime_timezone(_input: &str) -> IResult<&str, RRuleDateTime> {
+    unimplemented!();
+    /*let (input, value) = take(16u32)(input)?;
+
+    // TZID=America/New_York:19980119T020000
+
+    // https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html#specifiers
+    match Utc.datetime_from_str(value, "%Y%m%dT%H%M%SZ") {
+        Ok(datetime) => Ok((input, RRuleDateTime::Offset(datetime))),
+        Err(_) => Err(nom::Err::Error(nom::error::Error {
+            input: input, // TODO FIXME
+            code: ErrorKind::Fail,
+        })),
+    }*/
+}
+
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5
+pub fn datetime(input: &str) -> IResult<&str, RRuleDateTime> {
+    alt((datetime_utc, datetime_unspecified, datetime_timezone))(input)
+}
+
+pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {
+    alt((
+        |i| date(i).map(|o| (o.0, RRuleDateOrDateTime::Date(o.1))),
+        |i| datetime(i).map(|o| (o.0, RRuleDateOrDateTime::DateTime(o.1))),
+    ))(input)
+}
 
 // recur-rule-part
 
