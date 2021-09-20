@@ -2,6 +2,7 @@ use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take, take_till, take_while1},
+    character::complete::digit1,
     error::ErrorKind,
     multi::{many0, separated_list1},
     IResult,
@@ -172,6 +173,20 @@ pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {
         |i| datetime(i).map(|o| (o.0, RRuleDateOrDateTime::DateTime(o.1))),
         |i| date(i).map(|o| (o.0, RRuleDateOrDateTime::Date(o.1))),
     ))(input)
+}
+
+// TODO FIXME this parser is not strictly correct in all cases namely when a shorter number would suffice
+pub fn digits(input: &str) -> IResult<&str, i64> {
+    let (input, value) = digit1(input)?;
+    Ok((
+        input,
+        value.parse().map_err(|_| {
+            nom::Err::Error(nom::error::Error {
+                input, // TODO FIXME
+                code: ErrorKind::TooLarge,
+            })
+        })?,
+    ))
 }
 
 // recur-rule-part
