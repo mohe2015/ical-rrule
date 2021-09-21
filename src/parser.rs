@@ -1,7 +1,4 @@
-use std::{
-    num::{NonZeroU64, NonZeroU8},
-    ops::Range,
-};
+use std::{num::{NonZeroU64, NonZeroU8}, ops::{Range, RangeBounds}, str::FromStr};
 
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc, Weekday};
 use nom::{
@@ -232,16 +229,19 @@ pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {
 }
 
 // TODO FIXME this parser is not strictly correct in all cases namely when a shorter number would suffice
-pub fn digits(range: Range<i64>, input: &str) -> IResult<&str, i64> {
-    verify(map_res(digit1, |v: &str| v.parse::<i64>()), |v: &i64| {
-        range.contains(v)
-    })(input)
+pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(range: T) -> impl FnMut(&str) -> IResult<&str, U>  {
+    move |input| {
+        verify(map_res(digit1, |v: &str| v.parse::<U>()), |v: &U| {
+            range.contains(v)
+        })(input)
+    }
 }
 
 fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
     alt((
         nom::combinator::map(preceded(tag("FREQ="), freq), RecurRulePart::Freq),
-        nom::combinator::map(preceded(tag("UNTIL="), freq), RecurRulePart::Freq),
+        nom::combinator::map(preceded(tag("UNTIL="), enddate), |v| RecurRulePart::End(RecurEnd::Until(v))),
+        nom::combinator::map(preceded(tag("COUNT="), digits(std::num::NonZeroU64::new(1).unwrap()..)), |v| RecurRulePart::End(RecurEnd::Count(v))),
     ))(input)
 }
 
