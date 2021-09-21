@@ -1,4 +1,8 @@
-use std::{num::{NonZeroU64, NonZeroU8}, ops::{Range, RangeBounds}, str::FromStr};
+use std::{
+    num::{NonZeroU64, NonZeroU8},
+    ops::RangeBounds,
+    str::FromStr,
+};
 
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc, Weekday};
 use nom::{
@@ -7,7 +11,7 @@ use nom::{
     character::complete::digit1,
     combinator::{map_res, verify},
     error::ErrorKind,
-    multi::{many0, separated_list1},
+    multi::{many0, separated_list0, separated_list1},
     sequence::preceded,
     IResult,
 };
@@ -229,7 +233,9 @@ pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {
 }
 
 // TODO FIXME this parser is not strictly correct in all cases namely when a shorter number would suffice
-pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(range: T) -> impl FnMut(&str) -> IResult<&str, U>  {
+pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
+    range: T,
+) -> impl FnMut(&str) -> IResult<&str, U> {
     move |input| {
         verify(map_res(digit1, |v: &str| v.parse::<U>()), |v: &U| {
             range.contains(v)
@@ -240,8 +246,86 @@ pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(range: T) -> impl FnMu
 fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
     alt((
         nom::combinator::map(preceded(tag("FREQ="), freq), RecurRulePart::Freq),
-        nom::combinator::map(preceded(tag("UNTIL="), enddate), |v| RecurRulePart::End(RecurEnd::Until(v))),
-        nom::combinator::map(preceded(tag("COUNT="), digits(std::num::NonZeroU64::new(1).unwrap()..)), |v| RecurRulePart::End(RecurEnd::Count(v))),
+        nom::combinator::map(preceded(tag("UNTIL="), enddate), |v| {
+            RecurRulePart::End(RecurEnd::Until(v))
+        }),
+        nom::combinator::map(
+            preceded(
+                tag("COUNT="),
+                digits(std::num::NonZeroU64::new(1).unwrap()..),
+            ),
+            |v| RecurRulePart::End(RecurEnd::Count(v)),
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("INTERVAL="),
+                digits(std::num::NonZeroU64::new(1).unwrap()..),
+            ),
+            RecurRulePart::Interval,
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("BYSECOND="),
+                separated_list0(tag(","), digits(u8::from(0)..=u8::from(60))),
+            ),
+            RecurRulePart::Bysecond,
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("BYMINUTE="),
+                separated_list0(tag(","), digits(u8::from(0)..=u8::from(59))),
+            ),
+            RecurRulePart::Byminute,
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("BYHOUR="),
+                separated_list0(tag(","), digits(u8::from(0)..=u8::from(23))),
+            ),
+            RecurRulePart::Byhour,
+        ),
+        // TODO BYDAY,
+        nom::combinator::map(
+            preceded(
+                tag("BYMONTHDAY="),
+                separated_list0(tag(","), digits(i8::from(0)..=i8::from(23))),
+            ),
+            RecurRulePart::Bymonthday,
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("BYYEARDAY="),
+                separated_list0(tag(","), digits((0 as i16)..=(23 as i16))),
+            ),
+            RecurRulePart::Byyearday,
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("BYWEEKNO="),
+                separated_list0(tag(","), digits((0 as i8)..=(23 as i8))),
+            ),
+            RecurRulePart::Byweekno,
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("BYMONTH="),
+                separated_list0(
+                    tag(","),
+                    digits(
+                        std::num::NonZeroU8::new(1).unwrap()..=std::num::NonZeroU8::new(1).unwrap(),
+                    ),
+                ),
+            ),
+            RecurRulePart::Bymonth,
+        ),
+        nom::combinator::map(
+            preceded(
+                tag("BYWEEKNO="),
+                separated_list0(tag(","), digits((0 as i16)..=(23 as i16))),
+            ),
+            RecurRulePart::Bysetpos,
+        ),
+        //nom::combinator::map(preceded(tag("WKST="), weekday), RecurRulePart::Weekstart),
     ))(input)
 }
 
