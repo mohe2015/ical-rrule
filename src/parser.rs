@@ -11,6 +11,7 @@ use nom::{
     combinator::{map_res, verify},
     error::ErrorKind,
     multi::{many0, separated_list1},
+    sequence::preceded,
     IResult,
 };
 
@@ -45,6 +46,22 @@ pub struct RecurRule {
     bymonth: Vec<NonZeroU8>,
     bysetpos: Vec<i16>,
     weekstart: Weekday,
+}
+
+enum RecurRulePart {
+    Freq(Frequency),
+    End(RecurEnd),
+    Interval(NonZeroU64),
+    Bysecond(Vec<u8>),
+    Byminute(Vec<u8>),
+    Byhour(Vec<u8>),
+    Byday(Vec<WeekdayNum>),
+    Bymonthday(Vec<i8>),
+    Byyearday(Vec<i16>),
+    Byweekno(Vec<i8>),
+    Bymonth(Vec<NonZeroU8>),
+    Bysetpos(Vec<i16>),
+    Weekstart(Weekday),
 }
 
 pub fn constant_rrule(input: &str) -> IResult<&str, &str> {
@@ -221,9 +238,14 @@ pub fn digits(range: Range<i64>, input: &str) -> IResult<&str, i64> {
     })(input)
 }
 
-// recur-rule-part
+fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
+    alt((
+        nom::combinator::map(preceded(tag("FREQ="), freq), RecurRulePart::Freq),
+        nom::combinator::map(preceded(tag("UNTIL="), freq), RecurRulePart::Freq),
+    ))(input)
+}
 
-//recur
+pub fn recur(_input: &str) {}
 
 //pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
 
