@@ -27,8 +27,8 @@ pub enum RecurEnd {
 #[derive(Copy, Clone)]
 pub struct WeekdayNum {
     //relative: WeekdayRelative,
-    ordwk: Option<i8>,
-    weekday: Weekday,
+    pub ordwk: Option<i8>,
+    pub weekday: Weekday,
 }
 
 #[derive(Clone)]
@@ -371,7 +371,7 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
             ),
             RecurRulePart::Bysetpos,
         ),
-        //nom::combinator::map(preceded(tag("WKST="), weekday), RecurRulePart::Weekstart),
+        nom::combinator::map(preceded(tag("WKST="), weekday), RecurRulePart::Weekstart),
     ))(input)
 }
 
