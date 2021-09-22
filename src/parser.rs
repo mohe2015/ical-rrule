@@ -366,10 +366,9 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
 }
 
 pub fn recur(input: &str) -> IResult<&str, RecurRule> {
-    // the first thing needs to be frequency so do
+    // frequency is required and has to be first.
     let (input, freq) = preceded(tag("FREQ="), freq)(input)?;
 
-    // TODO FIXME this probably allocates unecessarily - can't use fold_many0 because we need separated? maybe separated could return iterator?
     let x = fold_many0(
         preceded(tag(";"), recur_rule_part),
         || RecurRule {
@@ -396,11 +395,9 @@ pub fn recur(input: &str) -> IResult<&str, RecurRule> {
             acc
         },
     )(input);
-    println!("{:?}", x);
+    let _ = x;
     x
 }
-
-//pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
 
 #[cfg(test)]
 mod tests {
