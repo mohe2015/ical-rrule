@@ -5,14 +5,23 @@ use std::{
 };
 
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc, Weekday};
-use nom::{IResult, branch::alt, bytes::complete::{tag, take, take_till, take_while1}, character::complete::digit1, combinator::{map_res, verify}, error::ErrorKind, multi::{fold_many0, many0, separated_list0, separated_list1}, sequence::preceded};
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take, take_till, take_while1},
+    character::complete::digit1,
+    combinator::{map_res, verify},
+    error::ErrorKind,
+    multi::{fold_many0, many0, separated_list0, separated_list1},
+    sequence::preceded,
+    IResult,
+};
 
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
 #[derive(Copy, Clone)]
 pub enum RecurEnd {
     Until(RRuleDateOrDateTime),
     Count(NonZeroU64),
-    Forever
+    Forever,
 }
 /*
 enum WeekdayRelative {
@@ -348,34 +357,36 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
 
 pub fn recur(input: &str) -> IResult<&str, RecurRule> {
     // the first thing needs to be frequency so do
-    let freq =  nom::combinator::map(preceded(tag("FREQ="), freq), RecurRulePart::Freq),
-    
+    let (input, freq) = preceded(tag("FREQ="), freq)(input)?;
 
     // TODO FIXME this probably allocates unecessarily - can't use fold_many0 because we need separated? maybe separated could return iterator?
-    nom::combinator::map(separated_list0(tag(";"), recur_rule_part), |v: Vec<RecurRulePart>| {
-        let rule = RecurRule {
-            freq: Frequency::Daily,
+    let x = fold_many0(
+        preceded(tag(";"), recur_rule_part),
+        || RecurRule {
+            freq,
             ..Default::default()
-        };
-        v.iter().fold(rule, |r, e| {
-            match e {
-                RecurRulePart::Freq(_) => todo!(), // TODO FIXME abort
-                RecurRulePart::End(_) => todo!(),
-                RecurRulePart::Interval(_) => todo!(),
-                RecurRulePart::Bysecond(_) => todo!(),
-                RecurRulePart::Byminute(_) => todo!(),
-                RecurRulePart::Byhour(_) => todo!(),
-                RecurRulePart::Byday(_) => todo!(),
-                RecurRulePart::Bymonthday(_) => todo!(),
-                RecurRulePart::Byyearday(_) => todo!(),
-                RecurRulePart::Byweekno(_) => todo!(),
-                RecurRulePart::Bymonth(_) => todo!(),
-                RecurRulePart::Bysetpos(_) => todo!(),
-                RecurRulePart::Weekstart(_) => todo!(),
-            }
-        })
-    })(input)
-
+        },
+        |mut acc, item| {
+            // TODO FIXME detect overrides (which is currently not possible for alles fields like this)
+            match item {
+                RecurRulePart::Freq(_v) => todo!(), // TODO FIXME abort
+                RecurRulePart::End(v) => acc.end = v,
+                RecurRulePart::Interval(v) => acc.interval = v,
+                RecurRulePart::Bysecond(v) => acc.bysecond = Some(v),
+                RecurRulePart::Byminute(v) => acc.byminute = Some(v),
+                RecurRulePart::Byhour(v) => acc.byhour = Some(v),
+                RecurRulePart::Byday(v) => acc.byday = Some(v),
+                RecurRulePart::Bymonthday(v) => acc.bymonthday = Some(v),
+                RecurRulePart::Byyearday(v) => acc.byyearday = Some(v),
+                RecurRulePart::Byweekno(v) => acc.byweekno = Some(v),
+                RecurRulePart::Bymonth(v) => acc.bymonth = Some(v),
+                RecurRulePart::Bysetpos(v) => acc.bysetpos = Some(v),
+                RecurRulePart::Weekstart(v) => acc.weekstart = v,
+            };
+            acc
+        },
+    )(input);
+    x
 }
 
 //pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
