@@ -295,24 +295,15 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
             RecurRulePart::Interval,
         ),
         nom::combinator::map(
-            preceded(
-                tag("BYSECOND="),
-                separated_list0(tag(","), digits(u8::from(0)..=u8::from(60))),
-            ),
+            preceded(tag("BYSECOND="), separated_list0(tag(","), digits(0..=60))),
             RecurRulePart::Bysecond,
         ),
         nom::combinator::map(
-            preceded(
-                tag("BYMINUTE="),
-                separated_list0(tag(","), digits(u8::from(0)..=u8::from(59))),
-            ),
+            preceded(tag("BYMINUTE="), separated_list0(tag(","), digits(0..=59))),
             RecurRulePart::Byminute,
         ),
         nom::combinator::map(
-            preceded(
-                tag("BYHOUR="),
-                separated_list0(tag(","), digits(u8::from(0)..=u8::from(23))),
-            ),
+            preceded(tag("BYHOUR="), separated_list0(tag(","), digits(0..=23))),
             RecurRulePart::Byhour,
         ),
         nom::combinator::map(
@@ -320,13 +311,12 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
                 tag("BYDAY="),
                 separated_list0(
                     tag(","),
-                    nom::combinator::map(
-                        tuple((opt(digits(i8::from(-53)..=i8::from(53))), weekday)),
-                        |v| WeekdayNum {
+                    nom::combinator::map(tuple((opt(digits((-53)..=53)), weekday)), |v| {
+                        WeekdayNum {
                             ordwk: v.0,
                             weekday: v.1,
-                        },
-                    ),
+                        }
+                    }),
                 ),
             ),
             RecurRulePart::Byday,
@@ -334,21 +324,21 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         nom::combinator::map(
             preceded(
                 tag("BYMONTHDAY="),
-                separated_list0(tag(","), digits(i8::from(0)..=i8::from(23))),
+                separated_list0(tag(","), digits(0..=23)),
             ),
             RecurRulePart::Bymonthday,
         ),
         nom::combinator::map(
             preceded(
                 tag("BYYEARDAY="),
-                separated_list0(tag(","), digits((0 as i16)..=(23 as i16))),
+                separated_list0(tag(","), digits(0_i16..=23_i16)),
             ),
             RecurRulePart::Byyearday,
         ),
         nom::combinator::map(
             preceded(
                 tag("BYWEEKNO="),
-                separated_list0(tag(","), digits((0 as i8)..=(23 as i8))),
+                separated_list0(tag(","), digits(0_i8..=23_i8)),
             ),
             RecurRulePart::Byweekno,
         ),
@@ -367,7 +357,7 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         nom::combinator::map(
             preceded(
                 tag("BYWEEKNO="),
-                separated_list0(tag(","), digits((0 as i16)..=(23 as i16))),
+                separated_list0(tag(","), digits(0_i16..=23_i16)),
             ),
             RecurRulePart::Bysetpos,
         ),
@@ -589,7 +579,7 @@ mod tests {
         // just for coverage
         let a = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0));
         let b = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1));
-        assert!(a.clone() != b);
+        assert!(a != b);
         print!("{:?}", a);
 
         let c = RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
@@ -598,10 +588,10 @@ mod tests {
         let d = RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
             NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1),
         ));
-        assert!(c.clone() != d);
+        assert!(c != d);
         print!("{:?}", c);
 
-        assert!(Frequency::Minutely.clone() == Frequency::Minutely);
+        assert!(Frequency::Minutely == Frequency::Minutely);
         print!("{:?}", Frequency::Minutely);
     }
 }
