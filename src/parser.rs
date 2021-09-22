@@ -17,21 +17,21 @@ use nom::{
 };
 
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum RecurEnd {
     Until(RRuleDateOrDateTime),
     Count(NonZeroU64),
     Forever,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct WeekdayNum {
     //relative: WeekdayRelative,
     pub ordwk: Option<i8>,
     pub weekday: Weekday,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RecurRule {
     freq: Frequency,
     end: RecurEnd,
@@ -406,6 +406,7 @@ pub fn recur(input: &str) -> IResult<&str, RecurRule> {
             acc
         },
     )(input);
+    println!("{:?}", x);
     x
 }
 
