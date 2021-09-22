@@ -5,20 +5,14 @@ use std::{
 };
 
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc, Weekday};
-use nom::{
-    branch::alt,
-    bytes::complete::{tag, take, take_till, take_while1},
-    character::complete::digit1,
-    combinator::{map_res, verify},
-    error::ErrorKind,
-    multi::{many0, separated_list0, separated_list1},
-    sequence::preceded,
-    IResult,
-};
+use nom::{IResult, branch::alt, bytes::complete::{tag, take, take_till, take_while1}, character::complete::digit1, combinator::{map_res, verify}, error::ErrorKind, multi::{fold_many0, many0, separated_list0, separated_list1}, sequence::preceded};
 
+// The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
+#[derive(Copy, Clone)]
 pub enum RecurEnd {
     Until(RRuleDateOrDateTime),
     Count(NonZeroU64),
+    Forever
 }
 /*
 enum WeekdayRelative {
@@ -27,26 +21,49 @@ enum WeekdayRelative {
     None
 }
 */
+
+#[derive(Copy, Clone)]
 pub struct WeekdayNum {
     //relative: WeekdayRelative,
     ordwk: Option<i8>,
     weekday: Weekday,
 }
 
+#[derive(Clone)]
 pub struct RecurRule {
     freq: Frequency,
     end: RecurEnd,
     interval: NonZeroU64,
-    bysecond: Vec<u8>,
-    byminute: Vec<u8>,
-    byhour: Vec<u8>,
-    byday: Vec<WeekdayNum>,
-    bymonthday: Vec<i8>,
-    byyearday: Vec<i16>,
-    byweekno: Vec<i8>,
-    bymonth: Vec<NonZeroU8>,
-    bysetpos: Vec<i16>,
+    bysecond: Option<Vec<u8>>,
+    byminute: Option<Vec<u8>>,
+    byhour: Option<Vec<u8>>,
+    byday: Option<Vec<WeekdayNum>>,
+    bymonthday: Option<Vec<i8>>,
+    byyearday: Option<Vec<i16>>,
+    byweekno: Option<Vec<i8>>,
+    bymonth: Option<Vec<NonZeroU8>>,
+    bysetpos: Option<Vec<i16>>,
     weekstart: Weekday,
+}
+
+impl Default for RecurRule {
+    fn default() -> Self {
+        RecurRule {
+            freq: Frequency::Daily, // TODO FIXME no default
+            end: RecurEnd::Forever,
+            interval: NonZeroU64::new(1).unwrap(),
+            bysecond: None,
+            byminute: None,
+            byhour: None,
+            byday: None,
+            bymonthday: None,
+            byyearday: None,
+            byweekno: None,
+            bymonth: None,
+            bysetpos: None,
+            weekstart: Weekday::Mon,
+        }
+    }
 }
 
 enum RecurRulePart {
@@ -329,7 +346,37 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
     ))(input)
 }
 
-pub fn recur(_input: &str) {}
+pub fn recur(input: &str) -> IResult<&str, RecurRule> {
+    // the first thing needs to be frequency so do
+    let freq =  nom::combinator::map(preceded(tag("FREQ="), freq), RecurRulePart::Freq),
+    
+
+    // TODO FIXME this probably allocates unecessarily - can't use fold_many0 because we need separated? maybe separated could return iterator?
+    nom::combinator::map(separated_list0(tag(";"), recur_rule_part), |v: Vec<RecurRulePart>| {
+        let rule = RecurRule {
+            freq: Frequency::Daily,
+            ..Default::default()
+        };
+        v.iter().fold(rule, |r, e| {
+            match e {
+                RecurRulePart::Freq(_) => todo!(), // TODO FIXME abort
+                RecurRulePart::End(_) => todo!(),
+                RecurRulePart::Interval(_) => todo!(),
+                RecurRulePart::Bysecond(_) => todo!(),
+                RecurRulePart::Byminute(_) => todo!(),
+                RecurRulePart::Byhour(_) => todo!(),
+                RecurRulePart::Byday(_) => todo!(),
+                RecurRulePart::Bymonthday(_) => todo!(),
+                RecurRulePart::Byyearday(_) => todo!(),
+                RecurRulePart::Byweekno(_) => todo!(),
+                RecurRulePart::Bymonth(_) => todo!(),
+                RecurRulePart::Bysetpos(_) => todo!(),
+                RecurRulePart::Weekstart(_) => todo!(),
+            }
+        })
+    })(input)
+
+}
 
 //pub fn quoted_string(input: &str) -> IResult<&str, &str> {}
 
