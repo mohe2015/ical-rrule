@@ -17,21 +17,21 @@ use nom::{
 };
 
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RecurEnd {
     Until(RRuleDateOrDateTime),
     Count(NonZeroU64),
     Forever,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct WeekdayNum {
     //relative: WeekdayRelative,
     pub ordwk: Option<i8>,
     pub weekday: Weekday,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RecurRule {
     freq: Frequency,
     end: RecurEnd,
@@ -51,7 +51,7 @@ pub struct RecurRule {
 impl Default for RecurRule {
     fn default() -> Self {
         RecurRule {
-            freq: Frequency::Daily, // TODO FIXME no default
+            freq: Frequency::Yearly, // TODO FIXME no default
             end: RecurEnd::Forever,
             interval: NonZeroU64::new(1).unwrap(),
             bysecond: None,
@@ -399,18 +399,28 @@ pub fn recur(input: &str) -> IResult<&str, RecurRule> {
     x
 }
 
+// but it SHOULD NOT be specified more than once. The recurrence set generated with multiple "RRULE" properties is undefined.
+pub fn rrule(input: &str) -> IResult<&str, RecurRule> {
+    let (input, _params) = preceded(tag("RRULE"), rrulparams)(input)?;
+    // TODO FIXME don't drop params
+    preceded(tag(":"), recur)(input)
+}
+
 #[cfg(test)]
 mod tests {
+    use std::num::NonZeroU64;
+
     use chrono::{DateTime, NaiveDate, Utc};
     use nom::{error::ErrorKind, IResult};
 
     use crate::parser::{
         constant_rrule, date, datetime, enddate, freq, iana_param, iana_token, other_param,
-        param_value, paramtext, rrulparams, Frequency, RRuleDateOrDateTime, RRuleDateTime,
+        param_value, paramtext, rrule, rrulparams, Frequency, RRuleDateOrDateTime, RRuleDateTime,
+        RecurEnd, RecurRule,
     };
 
     #[test]
-    fn it_works() {
+    fn it_works() -> Result<(), nom::Err<nom::error::Error<&'static str>>> {
         assert_eq!(constant_rrule("RRULE"), IResult::Ok(("", "RRULE")));
         assert_eq!(
             constant_rrule("NOTRRULE"),
@@ -577,7 +587,6 @@ mod tests {
         let a = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0));
         let b = RRuleDateTime::Unspecified(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1));
         assert!(a != b);
-        print!("{:?}", a);
 
         let c = RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
             NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0),
@@ -586,9 +595,21 @@ mod tests {
             NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1),
         ));
         assert!(c != d);
-        print!("{:?}", c);
 
         assert!(Frequency::Minutely == Frequency::Minutely);
-        print!("{:?}", Frequency::Minutely);
+
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Daily,
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=DAILY;COUNT=10")?
+        );
+
+        Ok(())
     }
 }

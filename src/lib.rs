@@ -11,3 +11,5 @@ pub mod parser;
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
 
 // https://datatracker.ietf.org/doc/html/rfc5234
+
+// https://stackoverflow.com/questions/46755838/when-will-a-single-icalendar-event-have-multiple-recurrence-rules
