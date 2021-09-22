@@ -598,6 +598,10 @@ mod tests {
 
         assert!(Frequency::Minutely == Frequency::Minutely);
 
+        // All examples assume the Eastern United States time zone.
+
+        // Daily for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970902T090000
         assert_eq!(
             (
                 "",
@@ -608,6 +612,22 @@ mod tests {
                 }
             ),
             rrule("RRULE:FREQ=DAILY;COUNT=10")?
+        );
+
+        // Daily until December 24, 1997:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Daily,
+                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+                    ))),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z")?
         );
 
         Ok(())
