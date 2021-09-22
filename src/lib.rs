@@ -1,4 +1,5 @@
 #![feature(const_impl_trait)]
+#![feature(const_fn_trait_bound)]
 pub mod parser;
 
 // https://github.com/Geal/nom/blob/master/doc/choosing_a_combinator.md

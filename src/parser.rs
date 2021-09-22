@@ -9,10 +9,10 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take, take_till, take_while1},
     character::complete::digit1,
-    combinator::{map_res, verify},
+    combinator::{map_res, opt, verify},
     error::ErrorKind,
     multi::{fold_many0, many0, separated_list0, separated_list1},
-    sequence::preceded,
+    sequence::{preceded, tuple},
     IResult,
 };
 
@@ -23,13 +23,6 @@ pub enum RecurEnd {
     Count(NonZeroU64),
     Forever,
 }
-/*
-enum WeekdayRelative {
-    Plus,
-    Minus,
-    None
-}
-*/
 
 #[derive(Copy, Clone)]
 pub struct WeekdayNum {
@@ -150,10 +143,10 @@ pub enum Frequency {
     Yearly,
 }
 
-pub const fn freq_element<'a>(
+pub const fn enum_element<'a, T: Copy>(
     string: &'static str,
-    enum_element: Frequency,
-) -> impl FnMut(&'a str) -> IResult<&'a str, Frequency> {
+    enum_element: T,
+) -> impl FnMut(&'a str) -> IResult<&'a str, T> {
     move |input| {
         let (input, _) = tag(string)(input)?;
         Ok((input, enum_element))
@@ -162,13 +155,25 @@ pub const fn freq_element<'a>(
 
 pub fn freq(input: &str) -> IResult<&str, Frequency> {
     alt((
-        freq_element("SECONDLY", Frequency::Secondly),
-        freq_element("MINUTELY", Frequency::Minutely),
-        freq_element("HOURLY", Frequency::Hourly),
-        freq_element("DAILY", Frequency::Daily),
-        freq_element("WEEKLY", Frequency::Weekly),
-        freq_element("MONTHLY", Frequency::Monthly),
-        freq_element("YEARLY", Frequency::Yearly),
+        enum_element("SECONDLY", Frequency::Secondly),
+        enum_element("MINUTELY", Frequency::Minutely),
+        enum_element("HOURLY", Frequency::Hourly),
+        enum_element("DAILY", Frequency::Daily),
+        enum_element("WEEKLY", Frequency::Weekly),
+        enum_element("MONTHLY", Frequency::Monthly),
+        enum_element("YEARLY", Frequency::Yearly),
+    ))(input)
+}
+
+pub fn weekday(input: &str) -> IResult<&str, Weekday> {
+    alt((
+        enum_element("MO", Weekday::Mon),
+        enum_element("TU", Weekday::Tue),
+        enum_element("WE", Weekday::Wed),
+        enum_element("TH", Weekday::Thu),
+        enum_element("FR", Weekday::Fri),
+        enum_element("SA", Weekday::Sat),
+        enum_element("SU", Weekday::Sun),
     ))(input)
 }
 
@@ -310,7 +315,22 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
             ),
             RecurRulePart::Byhour,
         ),
-        // TODO BYDAY,
+        nom::combinator::map(
+            preceded(
+                tag("BYDAY="),
+                separated_list0(
+                    tag(","),
+                    nom::combinator::map(
+                        tuple((opt(digits(i8::from(-53)..=i8::from(53))), weekday)),
+                        |v| WeekdayNum {
+                            ordwk: v.0,
+                            weekday: v.1,
+                        },
+                    ),
+                ),
+            ),
+            RecurRulePart::Byday,
+        ),
         nom::combinator::map(
             preceded(
                 tag("BYMONTHDAY="),
