@@ -408,7 +408,7 @@ pub fn rrule(input: &str) -> IResult<&str, RecurRule> {
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroU64;
+    use std::num::{NonZeroU64, NonZeroU8};
 
     use chrono::{DateTime, NaiveDate, Utc};
     use nom::{error::ErrorKind, IResult};
@@ -416,7 +416,7 @@ mod tests {
     use crate::parser::{
         constant_rrule, date, datetime, enddate, freq, iana_param, iana_token, other_param,
         param_value, paramtext, rrule, rrulparams, Frequency, RRuleDateOrDateTime, RRuleDateTime,
-        RecurEnd, RecurRule,
+        RecurEnd, RecurRule, WeekdayNum,
     };
 
     #[test]
@@ -628,6 +628,102 @@ mod tests {
                 }
             ),
             rrule("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z")?
+        );
+
+        // Every other day - forever:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Daily,
+                    interval: NonZeroU64::new(2).unwrap(),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=DAILY;INTERVAL=2")?
+        );
+
+        // Every 10 days, 5 occurrences:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Daily,
+                    interval: NonZeroU64::new(10).unwrap(),
+                    end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5")?
+        );
+
+        // Every day in January, for 3 years:
+        // DTSTART;TZID=America/New_York:19980101T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Yearly,
+                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                        DateTime::from_utc(
+                            NaiveDate::from_ymd(2000, 01, 31).and_hms(14, 0, 0),
+                            Utc
+                        )
+                    ))),
+                    bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
+                    byday: Some(vec![
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Sun
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Mon
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Tue
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Wed
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Thu
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Fri
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Sat
+                        }
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA")?
+        );
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Daily,
+                    bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
+                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                        DateTime::from_utc(
+                            NaiveDate::from_ymd(2000, 01, 31).and_hms(14, 0, 0),
+                            Utc
+                        )
+                    ))),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1")?
         );
 
         Ok(())
