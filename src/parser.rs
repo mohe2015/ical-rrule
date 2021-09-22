@@ -410,7 +410,7 @@ pub fn rrule(input: &str) -> IResult<&str, RecurRule> {
 mod tests {
     use std::num::{NonZeroU64, NonZeroU8};
 
-    use chrono::{DateTime, NaiveDate, Utc};
+    use chrono::{DateTime, NaiveDate, Utc, Weekday};
     use nom::{error::ErrorKind, IResult};
 
     use crate::parser::{
@@ -420,7 +420,7 @@ mod tests {
     };
 
     #[test]
-    fn it_works() -> Result<(), nom::Err<nom::error::Error<&'static str>>> {
+    fn it_works() {
         assert_eq!(constant_rrule("RRULE"), IResult::Ok(("", "RRULE")));
         assert_eq!(
             constant_rrule("NOTRRULE"),
@@ -611,7 +611,7 @@ mod tests {
                     ..Default::default()
                 }
             ),
-            rrule("RRULE:FREQ=DAILY;COUNT=10")?
+            rrule("RRULE:FREQ=DAILY;COUNT=10").unwrap()
         );
 
         // Daily until December 24, 1997:
@@ -627,7 +627,7 @@ mod tests {
                     ..Default::default()
                 }
             ),
-            rrule("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z")?
+            rrule("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z").unwrap()
         );
 
         // Every other day - forever:
@@ -641,7 +641,7 @@ mod tests {
                     ..Default::default()
                 }
             ),
-            rrule("RRULE:FREQ=DAILY;INTERVAL=2")?
+            rrule("RRULE:FREQ=DAILY;INTERVAL=2").unwrap()
         );
 
         // Every 10 days, 5 occurrences:
@@ -656,7 +656,7 @@ mod tests {
                     ..Default::default()
                 }
             ),
-            rrule("RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5")?
+            rrule("RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5").unwrap()
         );
 
         // Every day in January, for 3 years:
@@ -706,7 +706,8 @@ mod tests {
                     ..Default::default()
                 }
             ),
-            rrule("RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA")?
+            rrule("RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA")
+                .unwrap()
         );
         assert_eq!(
             (
@@ -723,9 +724,102 @@ mod tests {
                     ..Default::default()
                 }
             ),
-            rrule("RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1")?
+            rrule("RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1").unwrap()
         );
 
-        Ok(())
+        // Weekly for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Weekly,
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=WEEKLY;COUNT=10").unwrap()
+        );
+
+        // Weekly until December 24, 1997:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Weekly,
+                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+                    ))),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=WEEKLY;UNTIL=19971224T000000Z").unwrap()
+        );
+
+        // Every other week - forever:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Weekly,
+                    interval: NonZeroU64::new(2).unwrap(),
+                    weekstart: Weekday::Sun,
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;WKST=SU").unwrap()
+        );
+
+        // Weekly on Tuesday and Thursday for five weeks:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Weekly,
+                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                        DateTime::from_utc(NaiveDate::from_ymd(1997, 10, 07).and_hms(0, 0, 0), Utc)
+                    ))),
+                    weekstart: Weekday::Sun,
+                    byday: Some(vec![
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Tue
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Thu
+                        },
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH").unwrap()
+        );
+
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Weekly,
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    weekstart: Weekday::Sun,
+                    byday: Some(vec![
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Tue
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Thu
+                        },
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH").unwrap()
+        );
     }
 }
