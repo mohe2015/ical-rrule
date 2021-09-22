@@ -369,7 +369,7 @@ pub fn recur(input: &str) -> IResult<&str, RecurRule> {
         |mut acc, item| {
             // TODO FIXME detect overrides (which is currently not possible for alles fields like this)
             match item {
-                RecurRulePart::Freq(_v) => todo!(), // TODO FIXME abort
+                RecurRulePart::Freq(_v) => acc.freq = freq,
                 RecurRulePart::End(v) => acc.end = v,
                 RecurRulePart::Interval(v) => acc.interval = v,
                 RecurRulePart::Bysecond(v) => acc.bysecond = Some(v),
