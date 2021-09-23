@@ -427,7 +427,7 @@ pub fn rrule(input: &str) -> IResult<&str, RecurRule> {
 
 #[cfg(test)]
 mod tests {
-    use std::num::{NonZeroI8, NonZeroU64, NonZeroU8};
+    use std::num::{NonZeroI16, NonZeroI8, NonZeroU64, NonZeroU8};
 
     use chrono::{DateTime, NaiveDate, Utc, Weekday};
     use nom::{error::ErrorKind, IResult};
@@ -987,6 +987,157 @@ mod tests {
                 }
             ),
             rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=-3").unwrap()
+        );
+
+        // Monthly on the 2nd and 15th of the month for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        // RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    bymonthday: Some(vec![
+                        NonZeroI8::new(2).unwrap(),
+                        NonZeroI8::new(15).unwrap()
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15").unwrap()
+        );
+
+        // Monthly on the first and last day of the month for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970930T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    bymonthday: Some(vec![
+                        NonZeroI8::new(1).unwrap(),
+                        NonZeroI8::new(-1).unwrap()
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1").unwrap()
+        );
+
+        // Every 18 months on the 10th thru 15th of the month for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970910T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    interval: NonZeroU64::new(18).unwrap(),
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    bymonthday: Some(vec![
+                        NonZeroI8::new(10).unwrap(),
+                        NonZeroI8::new(11).unwrap(),
+                        NonZeroI8::new(12).unwrap(),
+                        NonZeroI8::new(13).unwrap(),
+                        NonZeroI8::new(14).unwrap(),
+                        NonZeroI8::new(15).unwrap(),
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15").unwrap()
+        );
+
+        // Every Tuesday, every other month:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    interval: NonZeroU64::new(2).unwrap(),
+                    byday: Some(vec![WeekdayNum {
+                        ordwk: None,
+                        weekday: chrono::Weekday::Tue
+                    }]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=TU").unwrap()
+        );
+
+        // Yearly in June and July for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970610T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Yearly,
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    bymonth: Some(vec![NonZeroU8::new(6).unwrap(), NonZeroU8::new(7).unwrap(),]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7").unwrap()
+        );
+
+        // Every other year on January, February, and March for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970310T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Yearly,
+                    interval: NonZeroU64::new(2).unwrap(),
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    bymonth: Some(vec![
+                        NonZeroU8::new(1).unwrap(),
+                        NonZeroU8::new(2).unwrap(),
+                        NonZeroU8::new(3).unwrap(),
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3").unwrap()
+        );
+
+        // Every third year on the 1st, 100th, and 200th day for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970101T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Yearly,
+                    interval: NonZeroU64::new(3).unwrap(),
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    byyearday: Some(vec![
+                        NonZeroI16::new(1).unwrap(),
+                        NonZeroI16::new(100).unwrap(),
+                        NonZeroI16::new(200).unwrap(),
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200").unwrap()
+        );
+
+        // Every 20th Monday of the year, forever:
+        // DTSTART;TZID=America/New_York:19970519T090000
+        //
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Yearly,
+                    byday: Some(vec![WeekdayNum {
+                        ordwk: Some(20),
+                        weekday: chrono::Weekday::Mon
+                    }]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=YEARLY;BYDAY=20MO").unwrap()
         );
     }
 }
