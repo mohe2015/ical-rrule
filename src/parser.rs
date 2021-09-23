@@ -269,7 +269,7 @@ pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
     move |input| {
         verify(
             map_res(
-                take_while(|c: char| ('0' <= c && c <= '9') || c == '-'),
+                take_while(|c: char| ('0'..='9').contains(&c) || c == '-'),
                 |v: &str| v.parse::<U>(),
             ),
             |v: &U| range.contains(v),
@@ -670,10 +670,7 @@ mod tests {
                 RecurRule {
                     freq: Frequency::Yearly,
                     end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(
-                            NaiveDate::from_ymd(2000, 01, 31).and_hms(14, 0, 0),
-                            Utc
-                        )
+                        DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc)
                     ))),
                     bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
                     byday: Some(vec![
@@ -719,10 +716,7 @@ mod tests {
                     freq: Frequency::Daily,
                     bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
                     end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(
-                            NaiveDate::from_ymd(2000, 01, 31).and_hms(14, 0, 0),
-                            Utc
-                        )
+                        DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc)
                     ))),
                     ..Default::default()
                 }
