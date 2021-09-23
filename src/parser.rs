@@ -7,8 +7,7 @@ use std::{
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc, Weekday};
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take, take_till, take_while1},
-    character::complete::digit1,
+    bytes::complete::{tag, take, take_till, take_while, take_while1},
     combinator::{map_res, opt, verify},
     error::ErrorKind,
     multi::{fold_many0, many0, separated_list0, separated_list1},
@@ -268,9 +267,13 @@ pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
     range: T,
 ) -> impl FnMut(&str) -> IResult<&str, U> {
     move |input| {
-        verify(map_res(digit1, |v: &str| v.parse::<U>()), |v: &U| {
-            range.contains(v)
-        })(input)
+        verify(
+            map_res(
+                take_while(|c: char| ('0' <= c && c <= '9') || c == '-'),
+                |v: &str| v.parse::<U>(),
+            ),
+            |v: &U| range.contains(v),
+        )(input)
     }
 }
 
@@ -917,6 +920,31 @@ mod tests {
                 }
             ),
             rrule("RRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR").unwrap()
+        );
+
+        // Every other month on the first and last Sunday of the month for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970907T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    interval: NonZeroU64::new(2).unwrap(),
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    byday: Some(vec![
+                        WeekdayNum {
+                            ordwk: Some(1),
+                            weekday: chrono::Weekday::Sun
+                        },
+                        WeekdayNum {
+                            ordwk: Some(-1),
+                            weekday: chrono::Weekday::Sun
+                        }
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU").unwrap()
         );
     }
 }
