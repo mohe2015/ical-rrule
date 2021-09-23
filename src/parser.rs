@@ -821,5 +821,102 @@ mod tests {
             ),
             rrule("RRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH").unwrap()
         );
+
+        // Every other week on Monday, Wednesday, and Friday until December 24, 1997, starting on Monday, September 1, 1997:
+        // DTSTART;TZID=America/New_York:19970901T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Weekly,
+                    interval: NonZeroU64::new(2).unwrap(),
+                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+                    ))),
+                    weekstart: Weekday::Sun,
+                    byday: Some(vec![
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Mon
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Wed
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Fri
+                        },
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR")
+                .unwrap()
+        );
+
+        // Every other week on Tuesday and Thursday, for 8 occurrences:
+        // DTSTART;TZID=America/New_York:19970902T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Weekly,
+                    interval: NonZeroU64::new(2).unwrap(),
+                    end: RecurEnd::Count(NonZeroU64::new(8).unwrap()),
+                    weekstart: Weekday::Sun,
+                    byday: Some(vec![
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Tue
+                        },
+                        WeekdayNum {
+                            ordwk: None,
+                            weekday: chrono::Weekday::Thu
+                        },
+                    ]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH").unwrap()
+        );
+
+        // Monthly on the first Friday for 10 occurrences:
+        // DTSTART;TZID=America/New_York:19970905T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+                    byday: Some(vec![WeekdayNum {
+                        ordwk: Some(1),
+                        weekday: chrono::Weekday::Fri
+                    },]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYDAY=1FR").unwrap()
+        );
+
+        // Monthly on the first Friday until December 24, 1997:
+        // DTSTART;TZID=America/New_York:19970905T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+                    ))),
+                    byday: Some(vec![WeekdayNum {
+                        ordwk: Some(1),
+                        weekday: chrono::Weekday::Fri
+                    },]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR").unwrap()
+        );
     }
 }
