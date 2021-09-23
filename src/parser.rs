@@ -1,5 +1,5 @@
 use std::{
-    num::{NonZeroU64, NonZeroU8},
+    num::{NonZeroI16, NonZeroI8, NonZeroU64, NonZeroU8},
     ops::RangeBounds,
     str::FromStr,
 };
@@ -39,11 +39,11 @@ pub struct RecurRule {
     byminute: Option<Vec<u8>>,
     byhour: Option<Vec<u8>>,
     byday: Option<Vec<WeekdayNum>>,
-    bymonthday: Option<Vec<i8>>,
-    byyearday: Option<Vec<i16>>,
-    byweekno: Option<Vec<i8>>,
+    bymonthday: Option<Vec<NonZeroI8>>,
+    byyearday: Option<Vec<NonZeroI16>>,
+    byweekno: Option<Vec<NonZeroI8>>,
     bymonth: Option<Vec<NonZeroU8>>,
-    bysetpos: Option<Vec<i16>>,
+    bysetpos: Option<Vec<NonZeroI16>>,
     weekstart: Weekday,
 }
 
@@ -75,11 +75,11 @@ enum RecurRulePart {
     Byminute(Vec<u8>),
     Byhour(Vec<u8>),
     Byday(Vec<WeekdayNum>),
-    Bymonthday(Vec<i8>),
-    Byyearday(Vec<i16>),
-    Byweekno(Vec<i8>),
+    Bymonthday(Vec<NonZeroI8>),
+    Byyearday(Vec<NonZeroI16>),
+    Byweekno(Vec<NonZeroI8>),
     Bymonth(Vec<NonZeroU8>),
-    Bysetpos(Vec<i16>),
+    Bysetpos(Vec<NonZeroI16>),
     Weekstart(Weekday),
 }
 
@@ -327,21 +327,33 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         nom::combinator::map(
             preceded(
                 tag("BYMONTHDAY="),
-                separated_list0(tag(","), digits(0..=23)),
+                separated_list0(
+                    tag(","),
+                    digits(
+                        std::num::NonZeroI8::new(-31).unwrap()
+                            ..=std::num::NonZeroI8::new(31).unwrap(),
+                    ),
+                ),
             ),
             RecurRulePart::Bymonthday,
         ),
         nom::combinator::map(
             preceded(
                 tag("BYYEARDAY="),
-                separated_list0(tag(","), digits(0_i16..=23_i16)),
+                separated_list0(
+                    tag(","),
+                    digits(NonZeroI16::new(-366).unwrap()..=NonZeroI16::new(366).unwrap()),
+                ),
             ),
             RecurRulePart::Byyearday,
         ),
         nom::combinator::map(
             preceded(
                 tag("BYWEEKNO="),
-                separated_list0(tag(","), digits(0_i8..=23_i8)),
+                separated_list0(
+                    tag(","),
+                    digits(NonZeroI8::new(-53).unwrap()..=NonZeroI8::new(53).unwrap()),
+                ),
             ),
             RecurRulePart::Byweekno,
         ),
@@ -351,7 +363,8 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
                 separated_list0(
                     tag(","),
                     digits(
-                        std::num::NonZeroU8::new(1).unwrap()..=std::num::NonZeroU8::new(1).unwrap(),
+                        std::num::NonZeroU8::new(1).unwrap()
+                            ..=std::num::NonZeroU8::new(12).unwrap(),
                     ),
                 ),
             ),
@@ -359,8 +372,11 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         ),
         nom::combinator::map(
             preceded(
-                tag("BYWEEKNO="),
-                separated_list0(tag(","), digits(0_i16..=23_i16)),
+                tag("BYSETPOS="),
+                separated_list0(
+                    tag(","),
+                    digits(NonZeroI16::new(-366).unwrap()..=NonZeroI16::new(366).unwrap()),
+                ),
             ),
             RecurRulePart::Bysetpos,
         ),
@@ -411,7 +427,7 @@ pub fn rrule(input: &str) -> IResult<&str, RecurRule> {
 
 #[cfg(test)]
 mod tests {
-    use std::num::{NonZeroU64, NonZeroU8};
+    use std::num::{NonZeroI8, NonZeroU64, NonZeroU8};
 
     use chrono::{DateTime, NaiveDate, Utc, Weekday};
     use nom::{error::ErrorKind, IResult};
@@ -939,6 +955,38 @@ mod tests {
                 }
             ),
             rrule("RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU").unwrap()
+        );
+
+        // Monthly on the second-to-last Monday of the month for 6 months:
+        // DTSTART;TZID=America/New_York:19970922T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
+                    byday: Some(vec![WeekdayNum {
+                        ordwk: Some(-2),
+                        weekday: chrono::Weekday::Mon
+                    }]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;COUNT=6;BYDAY=-2MO").unwrap()
+        );
+
+        // Monthly on the third-to-the-last day of the month, forever:
+        // DTSTART;TZID=America/New_York:19970928T090000
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Monthly,
+                    bymonthday: Some(vec![NonZeroI8::new(-3).unwrap()]),
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=-3").unwrap()
         );
     }
 }
