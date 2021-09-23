@@ -1,0 +1,71 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Get Date
+      id: get-date
+      run: |
+        echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
+      shell: bash
+    - uses: actions/cache@v2
+      with:
+        path: |
+          /usr/share/rust/.rustup/
+          /usr/share/rust/.cargo/
+          target/
+        key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}
+    - name: Install latest nightly
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: nightly
+          profile: minimal
+          override: true
+          components: rustfmt, clippy, llvm-tools-preview
+    - name: Cargo install
+      run: cargo install cargo-binutils rustfilt
+    - name: Run cargo fmt
+      run: cargo fmt -- --check
+    - uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all-features
+    - name: Run cargo build
+      run: cargo build
+    - name: Run cargo test
+      run: cargo test
+    - name: Run cargo clean
+      run: cargo clean
+    - name: Run cargo test
+      env:
+        RUSTFLAGS: '-Z instrument-coverage'
+      run: cargo test
+    - name: cargo profdata
+      run: cargo profdata -- merge -sparse default.profraw -o default.profdata
+    - name: clean
+      run: rm target/debug/deps/*.d
+    - name: coverage
+      run: cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-* --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+    - name: coverage summary
+      run: cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-*
+    - name: coverage html
+      run: cargo cov -- show --format=html --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-* --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: target/debug/coverage
