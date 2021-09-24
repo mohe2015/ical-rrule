@@ -590,7 +590,7 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateTime {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
-        let min = NaiveDate::from_yo(0, 0).and_hms(0, 0, 0).timestamp();
+        let min = NaiveDate::from_yo(0, 1).and_hms(0, 0, 0).timestamp();
         let max = NaiveDate::from_yo(9999, 365).and_hms(0, 0, 0).timestamp();
         match u.int_in_range(1..=2)? {
             // seems to not be supported for ical
