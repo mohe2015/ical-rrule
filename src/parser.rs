@@ -84,7 +84,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let byminute = match u.int_in_range(0..=1)? {
             0 => None,
@@ -97,7 +97,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let byhour = match u.int_in_range(0..=1)? {
             0 => None,
@@ -110,7 +110,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let byday = match u.int_in_range(0..=1)? {
             0 => None,
@@ -121,7 +121,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                     let ordwk = match u.int_in_range(0..=1)? {
                         0 => None,
                         1 => Some(u.int_in_range(-53_i8..=53_i8)?),
-                        _ => unreachable!()
+                        _ => unreachable!(),
                     };
                     my_collection.push(WeekdayNum {
                         ordwk,
@@ -130,7 +130,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let bymonthday = match u.int_in_range(0..=1)? {
             0 => None,
@@ -146,7 +146,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let byyearday = match u.int_in_range(0..=1)? {
             0 => None,
@@ -162,7 +162,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let bymonth = match u.int_in_range(0..=1)? {
             0 => None,
@@ -175,7 +175,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let bysetpos = match u.int_in_range(0..=1)? {
             0 => None,
@@ -191,7 +191,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let byweekno = match u.int_in_range(0..=1)? {
             0 => None,
@@ -207,10 +207,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let weekstart = Weekday::arbitrary(u)?;
-        
+
         Ok(RecurRule {
             freq,
             end,
@@ -590,6 +590,8 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateTime {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        let min = NaiveDate::from_yo(0, 0).and_hms(0, 0, 0).timestamp();
+        let max = NaiveDate::from_yo(9999, 365).and_hms(0, 0, 0).timestamp();
         match u.int_in_range(1..=2)? {
             // seems to not be supported for ical
             /*0 => {
@@ -601,14 +603,14 @@ impl<'a> Arbitrary<'a> for RRuleDateTime {
                 ))
             }*/
             1 => {
-                let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
+                let secs = u.int_in_range(min..=max)?;
                 Ok(RRuleDateTime::Unspecified(
                     NaiveDateTime::from_timestamp_opt(secs, 0)
                         .ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
             2 => {
-                let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
+                let secs = u.int_in_range(min..=max)?;
                 Ok(RRuleDateTime::Utc(DateTime::from_utc(
                     NaiveDateTime::from_timestamp_opt(secs, 0)
                         .ok_or(arbitrary::Error::IncorrectFormat)?,
