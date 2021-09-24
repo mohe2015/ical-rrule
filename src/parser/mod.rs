@@ -13,9 +13,6 @@ use nom::{
     IResult,
 };
 
-#[cfg(feature = "arbitrary")]
-use arbitrary::{Arbitrary, Result, Unstructured};
-
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct WeekdayNum {
     pub ordwk: Option<i8>,
