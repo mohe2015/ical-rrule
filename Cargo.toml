@@ -11,4 +11,4 @@ chrono = "0.4"
 arbitrary = { version = "1", optional = true, features = ["derive"] }
 
 [features]
-default = ["arbitrary"]
+#default = ["arbitrary"] # only uncomment if needed - seems to break code coverage
