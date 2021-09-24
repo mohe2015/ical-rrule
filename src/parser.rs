@@ -31,11 +31,11 @@ impl fmt::Display for RecurEnd {
             RecurEnd::Until(v) => match v {
                 RRuleDateOrDateTime::Date(d) => write!(f, ";UNTIL={}", d.format("%Y%m%d")),
                 RRuleDateOrDateTime::DateTime(d) => match d {
-                    RRuleDateTime::Utc(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
+                    RRuleDateTime::Utc(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%SZ")),
                     RRuleDateTime::Unspecified(dt) => {
                         write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S"))
                     }
-                    RRuleDateTime::Offset(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
+                    RRuleDateTime::Offset(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")), // TODO FIXME
                 },
             },
             RecurEnd::Count(v) => write!(f, ";COUNT={}", v),
@@ -78,7 +78,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -88,7 +88,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -98,7 +98,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -106,7 +106,7 @@ impl fmt::Display for RecurRule {
             Some(v) => ";BYDAY=".to_string() + &v.iter().map(|v| match v.ordwk {
                 Some(q) => q.to_string(),
                 None => "".to_string(),
-            } + &v.weekday.to_string()).collect::<Vec<String>>().join(", "),
+            } + &v.weekday.to_string()).collect::<Vec<String>>().join(","),
             None => "".to_string(),
         };
         let bymonthdaystring = match &self.bymonthday {
@@ -115,7 +115,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -125,7 +125,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -135,7 +135,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -145,7 +145,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -155,7 +155,7 @@ impl fmt::Display for RecurRule {
                     + &v.iter()
                         .map(|v| v.to_string())
                         .collect::<Vec<String>>()
-                        .join(", ")
+                        .join(",")
             }
             None => "".to_string(),
         };
@@ -164,9 +164,14 @@ impl fmt::Display for RecurRule {
         } else {
             ";INTERVAL=".to_string() + &self.interval.to_string()
         };
+        let weekstartstring = if self.weekstart == Weekday::Mon {
+            "".to_string()
+        } else {
+            ";WKST=".to_string() + &self.weekstart.to_string()
+        };
         write!(
             f,
-            "RRULE:FREQ={}{}{}{}{}{}{}{}{}{}{}{}",
+            "RRULE:FREQ={}{}{}{}{}{}{}{}{}{}{}{}{}",
             self.freq,
             self.end,
             intervalstring,
@@ -178,7 +183,8 @@ impl fmt::Display for RecurRule {
             byyeardaystring,
             byweeknostring,
             bymonthstring,
-            bysetposstring
+            bysetposstring,
+            weekstartstring
         )
     }
 }
@@ -407,7 +413,9 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
             0 => Ok(RRuleDateOrDateTime::DateTime(RRuleDateTime::arbitrary(u)?)),
             1 => {
                 // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L27
-                let year = u.int_in_range((i32::MIN >> 13)..=(i32::MAX >> 13))?;
+                //let year = u.int_in_range((i32::MIN >> 13)..=(i32::MAX >> 13))?;
+                // we'll ical is stupid
+                let year = u.int_in_range(0..=9999)?;
                 // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L268
                 // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L173
                 let day = u.int_in_range(1..=366)?;
@@ -423,15 +431,16 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateTime {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
-        match u.int_in_range(0..=2)? {
-            0 => {
+        match u.int_in_range(1..=2)? {
+            // seems to not be supported for ical
+            /*0 => {
                 let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
                 Ok(RRuleDateTime::Offset(
                     FixedOffset::east_opt(0)
                         .and_then(|v| v.timestamp_opt(secs, 0).single())
                         .ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
-            }
+            }*/
             1 => {
                 let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
                 Ok(RRuleDateTime::Unspecified(
