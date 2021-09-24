@@ -11,9 +11,11 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
+nom = "7"
 
 [dependencies.ical-rrule]
 path = ".."
+features = ["arbitrary"]
 
 # Prevent this from interfering with workspaces
 [workspace]
@@ -22,5 +24,11 @@ members = ["."]
 [[bin]]
 name = "fuzz_target_1"
 path = "fuzz_targets/fuzz_target_1.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "inverse_equal"
+path = "fuzz_targets/inverse_equal.rs"
 test = false
 doc = false
