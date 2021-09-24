@@ -53,7 +53,6 @@ pub struct WeekdayNum {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct RecurRule {
     freq: Frequency,
     end: RecurEnd,
@@ -68,6 +67,34 @@ pub struct RecurRule {
     bymonth: Option<Vec<NonZeroU8>>,
     bysetpos: Option<Vec<NonZeroI16>>,
     weekstart: Weekday,
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a> Arbitrary<'a> for RecurRule {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        let freq = Frequency::arbitrary(u)?;
+        let end = RecurEnd::arbitrary(u)?;
+        let interval = NonZeroU64::arbitrary(u)?;
+        let bysecond = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let element = u.int_in_range(0_u8..=60_u8)?;
+                    my_collection.push(element);
+                }
+                Some(my_collection)
+            }
+        };
+
+        Ok(RecurRule {
+            freq,
+            end,
+            interval,
+            bysecond,
+        })
+    }
 }
 
 impl fmt::Display for RecurRule {
