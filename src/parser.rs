@@ -5,7 +5,7 @@ use std::{
     str::FromStr,
 };
 
-use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc, Weekday};
+use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take, take_till, take_while, take_while1},
@@ -18,6 +18,7 @@ use nom::{
 
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum RecurEnd {
     Until(RRuleDateOrDateTime),
     Count(NonZeroU64),
@@ -31,7 +32,9 @@ impl fmt::Display for RecurEnd {
                 RRuleDateOrDateTime::Date(d) => write!(f, ";UNTIL={}", d.format("%Y%m%d")),
                 RRuleDateOrDateTime::DateTime(d) => match d {
                     RRuleDateTime::Utc(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
-                    RRuleDateTime::Unspecified(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
+                    RRuleDateTime::Unspecified(dt) => {
+                        write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S"))
+                    }
                     RRuleDateTime::Offset(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
                 },
             },
@@ -42,6 +45,7 @@ impl fmt::Display for RecurEnd {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct WeekdayNum {
     //relative: WeekdayRelative,
     pub ordwk: Option<i8>,
@@ -49,6 +53,7 @@ pub struct WeekdayNum {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct RecurRule {
     freq: Frequency,
     end: RecurEnd,
@@ -68,15 +73,33 @@ pub struct RecurRule {
 impl fmt::Display for RecurRule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let bysecondstring = match &self.bysecond {
-            Some(v) => ";BYSECOND=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYSECOND=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
         let byminutestring = match &self.byminute {
-            Some(v) => ";BYMINUTE=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYMINUTE=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
         let byhourstring = match &self.byhour {
-            Some(v) => ";BYHOUR=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYHOUR=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
         let bydaystring = match &self.byday {
@@ -87,27 +110,97 @@ impl fmt::Display for RecurRule {
             None => "".to_string(),
         };
         let bymonthdaystring = match &self.bymonthday {
-            Some(v) => ";BYMONTHDAY=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYMONTHDAY=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
         let byyeardaystring = match &self.byyearday {
-            Some(v) => ";BYYEARDAY=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYYEARDAY=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
         let byweeknostring = match &self.byweekno {
-            Some(v) => ";BYWEEKNO=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYWEEKNO=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
         let bymonthstring = match &self.bymonth {
-            Some(v) => ";BYMONTH=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYMONTH=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
         let bysetposstring = match &self.bysetpos {
-            Some(v) => ";BYSETPOS=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            Some(v) => {
+                ";BYSETPOS=".to_string()
+                    + &v.iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+            }
             None => "".to_string(),
         };
-        write!(f, "RRULE:FREQ={}{};INTERVAL={}{}", self.freq, self.end, self.interval, bysecondstring)
+        let intervalstring = if self.interval == NonZeroU64::new(1).unwrap() {
+            "".to_string()
+        } else {
+            ";INTERVAL=".to_string() + &self.interval.to_string()
+        };
+        write!(
+            f,
+            "RRULE:FREQ={}{}{}{}{}{}{}{}{}{}{}{}",
+            self.freq,
+            self.end,
+            intervalstring,
+            bysecondstring,
+            byminutestring,
+            byhourstring,
+            bydaystring,
+            bymonthdaystring,
+            byyeardaystring,
+            byweeknostring,
+            bymonthstring,
+            bysetposstring
+        )
     }
+}
+
+// TODO FIXME use chrono Weekday when arbitrary is implemented
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
+pub enum Weekday {
+    /// Monday.
+    Mon = 0,
+    /// Tuesday.
+    Tue = 1,
+    /// Wednesday.
+    Wed = 2,
+    /// Thursday.
+    Thu = 3,
+    /// Friday.
+    Fri = 4,
+    /// Saturday.
+    Sat = 5,
+    /// Sunday.
+    Sun = 6,
 }
 
 impl Default for RecurRule {
@@ -195,6 +288,7 @@ pub fn rrulparams(input: &str) -> IResult<&str, Vec<(&str, Vec<&str>)>> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum Frequency {
     Secondly,
     Minutely,
@@ -245,6 +339,24 @@ pub fn freq(input: &str) -> IResult<&str, Frequency> {
     ))(input)
 }
 
+impl fmt::Display for Weekday {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Weekday::Mon => "MO",
+                Weekday::Tue => "TU",
+                Weekday::Wed => "WE",
+                Weekday::Thu => "TH",
+                Weekday::Fri => "FR",
+                Weekday::Sat => "SA",
+                Weekday::Sun => "SU",
+            }
+        )
+    }
+}
+
 pub fn weekday(input: &str) -> IResult<&str, Weekday> {
     alt((
         enum_element("MO", Weekday::Mon),
@@ -283,6 +395,27 @@ pub enum RRuleDateTime {
 pub enum RRuleDateOrDateTime {
     Date(NaiveDate),
     DateTime(RRuleDateTime),
+}
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::{Arbitrary, Result, Unstructured};
+
+#[cfg(feature = "arbitrary")]
+impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        let mut my_value = RRuleDateOrDateTime::Date(NaiveDate::from_ymd(1, 11, 1));
+
+        Ok(my_value)
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a> Arbitrary<'a> for RRuleDateTime {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        let mut my_value = unimplemented!();
+
+        Ok(my_value)
+    }
 }
 
 fn datetime_utc(input: &str) -> IResult<&str, RRuleDateTime> {
@@ -510,13 +643,13 @@ pub fn rrule(input: &str) -> IResult<&str, RecurRule> {
 mod tests {
     use std::num::{NonZeroI16, NonZeroI8, NonZeroU64, NonZeroU8};
 
-    use chrono::{DateTime, NaiveDate, Utc, Weekday};
+    use chrono::{DateTime, NaiveDate, Utc};
     use nom::{error::ErrorKind, IResult};
 
     use crate::parser::{
         constant_rrule, date, datetime, enddate, freq, iana_param, iana_token, other_param,
         param_value, paramtext, rrule, rrulparams, Frequency, RRuleDateOrDateTime, RRuleDateTime,
-        RecurEnd, RecurRule, WeekdayNum,
+        RecurEnd, RecurRule, Weekday, WeekdayNum,
     };
 
     #[test]
@@ -702,17 +835,13 @@ mod tests {
 
         // Daily for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
-        assert_eq!(
-            (
-                "",
-                RecurRule {
-                    freq: Frequency::Daily,
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    ..Default::default()
-                }
-            ),
-            rrule("RRULE:FREQ=DAILY;COUNT=10").unwrap()
-        );
+        let rule = RecurRule {
+            freq: Frequency::Daily,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            ..Default::default()
+        };
+        assert_eq!("RRULE:FREQ=DAILY;COUNT=10", rule.to_string());
+        assert_eq!(("", rule), rrule("RRULE:FREQ=DAILY;COUNT=10").unwrap());
 
         // Daily until December 24, 1997:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -773,31 +902,31 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Sun
+                            weekday: Weekday::Sun
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Mon
+                            weekday: Weekday::Mon
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Wed
+                            weekday: Weekday::Wed
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Thu
+                            weekday: Weekday::Thu
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Fri
+                            weekday: Weekday::Fri
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Sat
+                            weekday: Weekday::Sat
                         }
                     ]),
                     ..Default::default()
@@ -880,11 +1009,11 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Thu
+                            weekday: Weekday::Thu
                         },
                     ]),
                     ..Default::default()
@@ -903,11 +1032,11 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Thu
+                            weekday: Weekday::Thu
                         },
                     ]),
                     ..Default::default()
@@ -931,15 +1060,15 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Mon
+                            weekday: Weekday::Mon
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Wed
+                            weekday: Weekday::Wed
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Fri
+                            weekday: Weekday::Fri
                         },
                     ]),
                     ..Default::default()
@@ -962,11 +1091,11 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Thu
+                            weekday: Weekday::Thu
                         },
                     ]),
                     ..Default::default()
@@ -985,7 +1114,7 @@ mod tests {
                     end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
                     byday: Some(vec![WeekdayNum {
                         ordwk: Some(1),
-                        weekday: chrono::Weekday::Fri
+                        weekday: Weekday::Fri
                     },]),
                     ..Default::default()
                 }
@@ -1005,7 +1134,7 @@ mod tests {
                     ))),
                     byday: Some(vec![WeekdayNum {
                         ordwk: Some(1),
-                        weekday: chrono::Weekday::Fri
+                        weekday: Weekday::Fri
                     },]),
                     ..Default::default()
                 }
@@ -1025,11 +1154,11 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: Some(1),
-                            weekday: chrono::Weekday::Sun
+                            weekday: Weekday::Sun
                         },
                         WeekdayNum {
                             ordwk: Some(-1),
-                            weekday: chrono::Weekday::Sun
+                            weekday: Weekday::Sun
                         }
                     ]),
                     ..Default::default()
@@ -1048,7 +1177,7 @@ mod tests {
                     end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
                     byday: Some(vec![WeekdayNum {
                         ordwk: Some(-2),
-                        weekday: chrono::Weekday::Mon
+                        weekday: Weekday::Mon
                     }]),
                     ..Default::default()
                 }
@@ -1140,7 +1269,7 @@ mod tests {
                     interval: NonZeroU64::new(2).unwrap(),
                     byday: Some(vec![WeekdayNum {
                         ordwk: None,
-                        weekday: chrono::Weekday::Tue
+                        weekday: Weekday::Tue
                     }]),
                     ..Default::default()
                 }
@@ -1212,7 +1341,7 @@ mod tests {
                     freq: Frequency::Yearly,
                     byday: Some(vec![WeekdayNum {
                         ordwk: Some(20),
-                        weekday: chrono::Weekday::Mon
+                        weekday: Weekday::Mon
                     }]),
                     ..Default::default()
                 }
@@ -1229,7 +1358,7 @@ mod tests {
                     freq: Frequency::Yearly,
                     byday: Some(vec![WeekdayNum {
                         ordwk: None,
-                        weekday: chrono::Weekday::Mon
+                        weekday: Weekday::Mon
                     }]),
                     byweekno: Some(vec![NonZeroI8::new(20).unwrap(),]),
                     ..Default::default()
@@ -1248,7 +1377,7 @@ mod tests {
                     bymonth: Some(vec![NonZeroU8::new(3).unwrap(),]),
                     byday: Some(vec![WeekdayNum {
                         ordwk: None,
-                        weekday: chrono::Weekday::Thu
+                        weekday: Weekday::Thu
                     }]),
                     ..Default::default()
                 }
@@ -1270,7 +1399,7 @@ mod tests {
                     ]),
                     byday: Some(vec![WeekdayNum {
                         ordwk: None,
-                        weekday: chrono::Weekday::Thu
+                        weekday: Weekday::Thu
                     }]),
                     ..Default::default()
                 }
@@ -1288,7 +1417,7 @@ mod tests {
                     freq: Frequency::Monthly,
                     byday: Some(vec![WeekdayNum {
                         ordwk: None,
-                        weekday: chrono::Weekday::Fri
+                        weekday: Weekday::Fri
                     }]),
                     bymonthday: Some(vec![NonZeroI8::new(13).unwrap(),]),
                     ..Default::default()
@@ -1306,7 +1435,7 @@ mod tests {
                     freq: Frequency::Monthly,
                     byday: Some(vec![WeekdayNum {
                         ordwk: None,
-                        weekday: chrono::Weekday::Sat
+                        weekday: Weekday::Sat
                     }]),
                     bymonthday: Some(vec![
                         NonZeroI8::new(7).unwrap(),
@@ -1334,7 +1463,7 @@ mod tests {
                     bymonth: Some(vec![NonZeroU8::new(11).unwrap(),]),
                     byday: Some(vec![WeekdayNum {
                         ordwk: None,
-                        weekday: chrono::Weekday::Tue
+                        weekday: Weekday::Tue
                     }]),
                     bymonthday: Some(vec![
                         NonZeroI8::new(2).unwrap(),
@@ -1363,15 +1492,15 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Wed
+                            weekday: Weekday::Wed
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Thu
+                            weekday: Weekday::Thu
                         }
                     ]),
                     bysetpos: Some(vec![NonZeroI16::new(3).unwrap(),]),
@@ -1391,23 +1520,23 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Mon
+                            weekday: Weekday::Mon
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Wed
+                            weekday: Weekday::Wed
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Thu
+                            weekday: Weekday::Thu
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Fri
+                            weekday: Weekday::Fri
                         },
                     ]),
                     bysetpos: Some(vec![NonZeroI16::new(-2).unwrap(),]),
@@ -1507,11 +1636,11 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Sun
+                            weekday: Weekday::Sun
                         },
                     ]),
                     weekstart: Weekday::Mon,
@@ -1531,11 +1660,11 @@ mod tests {
                     byday: Some(vec![
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Tue
+                            weekday: Weekday::Tue
                         },
                         WeekdayNum {
                             ordwk: None,
-                            weekday: chrono::Weekday::Sun
+                            weekday: Weekday::Sun
                         },
                     ]),
                     weekstart: Weekday::Sun,
