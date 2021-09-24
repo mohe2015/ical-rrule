@@ -3,18 +3,13 @@ pub mod enum_utils;
 pub mod recur_rule;
 
 use std::fmt;
-use std::{
-    num::{NonZeroI16, NonZeroI8, NonZeroU64, NonZeroU8},
-    ops::RangeBounds,
-    str::FromStr,
-};
+use std::{ops::RangeBounds, str::FromStr};
 
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_till, take_while, take_while1},
-    combinator::{map_res, opt, verify},
-    multi::{fold_many0, many0, separated_list0, separated_list1},
-    sequence::{preceded, tuple},
+    combinator::{map_res, verify},
+    multi::{many0, separated_list1},
     IResult,
 };
 
@@ -117,9 +112,8 @@ pub fn freq(input: &str) -> IResult<&str, Frequency> {
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Result, Unstructured};
 
-use crate::weekday::{weekday, Weekday};
+use crate::weekday::Weekday;
 
-use self::chrono_utils::{enddate, RecurEnd};
 use self::enum_utils::enum_element;
 
 // TODO FIXME this parser is not strictly correct in all cases namely when a shorter number would suffice
