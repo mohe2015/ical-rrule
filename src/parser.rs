@@ -45,9 +45,7 @@ impl fmt::Display for RecurEnd {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct WeekdayNum {
-    //relative: WeekdayRelative,
     pub ordwk: Option<i8>,
     pub weekday: Weekday,
 }
@@ -86,13 +84,147 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
+            _ => unreachable!()
         };
-
+        let byminute = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let element = u.int_in_range(0_u8..=59_u8)?;
+                    my_collection.push(element);
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let byhour = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let element = u.int_in_range(0_u8..=23_u8)?;
+                    my_collection.push(element);
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let byday = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let ordwk = match u.int_in_range(0..=1)? {
+                        0 => None,
+                        1 => Some(u.int_in_range(-53_i8..=53_i8)?),
+                        _ => unreachable!()
+                    };
+                    my_collection.push(WeekdayNum {
+                        ordwk,
+                        weekday: Weekday::arbitrary(u)?,
+                    });
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let bymonthday = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let mut element = u.int_in_range(-31..=30)?;
+                    if element == 0 {
+                        element = 31;
+                    }
+                    my_collection.push(NonZeroI8::new(element).unwrap());
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let byyearday = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let mut element = u.int_in_range(-366..=365)?;
+                    if element == 0 {
+                        element = 366;
+                    }
+                    my_collection.push(NonZeroI16::new(element).unwrap());
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let bymonth = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let element = u.int_in_range(1..=12)?;
+                    my_collection.push(NonZeroU8::new(element).unwrap());
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let bysetpos = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let mut element = u.int_in_range(-366..=365)?;
+                    if element == 0 {
+                        element = 366;
+                    }
+                    my_collection.push(NonZeroI16::new(element).unwrap());
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let byweekno = match u.int_in_range(0..=1)? {
+            0 => None,
+            1 => {
+                let len = u.arbitrary_len::<u8>()?;
+                let mut my_collection = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let mut element = u.int_in_range(-53..=52)?;
+                    if element == 0 {
+                        element = 53;
+                    }
+                    my_collection.push(NonZeroI8::new(element).unwrap());
+                }
+                Some(my_collection)
+            }
+            _ => unreachable!()
+        };
+        let weekstart = Weekday::arbitrary(u)?;
+        
         Ok(RecurRule {
             freq,
             end,
             interval,
             bysecond,
+            byminute,
+            byhour,
+            byday,
+            bymonthday,
+            byyearday,
+            bymonth,
+            bysetpos,
+            byweekno,
+            weekstart,
         })
     }
 }
