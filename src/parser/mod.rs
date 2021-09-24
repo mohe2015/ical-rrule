@@ -1,17 +1,20 @@
 pub mod chrono_utils;
 pub mod enum_utils;
+pub mod frequency;
 pub mod recur_rule;
 
-use std::fmt;
 use std::{ops::RangeBounds, str::FromStr};
 
+use crate::weekday::Weekday;
 use nom::{
-    branch::alt,
     bytes::complete::{tag, take_till, take_while, take_while1},
     combinator::{map_res, verify},
     multi::{many0, separated_list1},
     IResult,
 };
+
+#[cfg(feature = "arbitrary")]
+use arbitrary::{Arbitrary, Result, Unstructured};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct WeekdayNum {
@@ -67,55 +70,6 @@ pub fn rrulparams(input: &str) -> IResult<&str, Vec<(&str, Vec<&str>)>> {
     many0(rrulparam)(input)
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-pub enum Frequency {
-    Secondly,
-    Minutely,
-    Hourly,
-    Daily,
-    Weekly,
-    Monthly,
-    Yearly,
-}
-
-impl fmt::Display for Frequency {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Frequency::Secondly => "SECONDLY",
-                Frequency::Minutely => "MINUTELY",
-                Frequency::Hourly => "HOURLY",
-                Frequency::Daily => "DAILY",
-                Frequency::Weekly => "WEEKLY",
-                Frequency::Monthly => "MONTHLY",
-                Frequency::Yearly => "YEARLY",
-            }
-        )
-    }
-}
-
-pub fn freq(input: &str) -> IResult<&str, Frequency> {
-    alt((
-        enum_element("SECONDLY", Frequency::Secondly),
-        enum_element("MINUTELY", Frequency::Minutely),
-        enum_element("HOURLY", Frequency::Hourly),
-        enum_element("DAILY", Frequency::Daily),
-        enum_element("WEEKLY", Frequency::Weekly),
-        enum_element("MONTHLY", Frequency::Monthly),
-        enum_element("YEARLY", Frequency::Yearly),
-    ))(input)
-}
-
-#[cfg(feature = "arbitrary")]
-use arbitrary::{Arbitrary, Result, Unstructured};
-
-use crate::weekday::Weekday;
-
-use self::enum_utils::enum_element;
-
 // TODO FIXME this parser is not strictly correct in all cases namely when a shorter number would suffice
 pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
     range: T,
@@ -140,9 +94,11 @@ mod tests {
 
     use crate::parser::{
         chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
-        constant_rrule, freq, iana_param, iana_token, other_param, param_value, paramtext,
+        constant_rrule,
+        frequency::{freq, Frequency},
+        iana_param, iana_token, other_param, param_value, paramtext,
         recur_rule::{rrule, RecurRule},
-        rrulparams, Frequency, Weekday, WeekdayNum,
+        rrulparams, Weekday, WeekdayNum,
     };
 
     #[test]
@@ -321,7 +277,10 @@ mod tests {
             NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 1),
         ));
         assert!(c != d);
+    }
 
+    #[test]
+    fn examples() {
         // All examples assume the Eastern United States time zone.
 
         // Daily for 10 occurrences:

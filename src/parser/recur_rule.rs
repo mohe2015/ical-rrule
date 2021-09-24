@@ -18,7 +18,9 @@ use crate::weekday::{weekday, Weekday};
 
 use super::{
     chrono_utils::{enddate, RecurEnd},
-    digits, freq, rrulparams, Frequency, WeekdayNum,
+    digits,
+    frequency::{freq, Frequency},
+    rrulparams, WeekdayNum,
 };
 
 #[derive(Clone, Debug, PartialEq)]
