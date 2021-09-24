@@ -1,10 +1,9 @@
-
 use std::{fmt, num::NonZeroU64};
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Result, Unstructured};
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
-use nom::{branch::alt, IResult, bytes::complete::take, error::ErrorKind};
+use nom::{branch::alt, bytes::complete::take, error::ErrorKind, IResult};
 
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -34,7 +33,6 @@ impl fmt::Display for RecurEnd {
     }
 }
 
-
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4
 pub fn date(input: &str) -> IResult<&str, NaiveDate> {
     let (input, value) = take(8u32)(input)?;
@@ -62,7 +60,6 @@ pub enum RRuleDateOrDateTime {
     Date(NaiveDate),
     DateTime(RRuleDateTime),
 }
-
 
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {

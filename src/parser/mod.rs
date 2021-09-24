@@ -1,5 +1,5 @@
-pub mod enum_utils;
 pub mod chrono_utils;
+pub mod enum_utils;
 
 use std::fmt;
 use std::{
@@ -8,12 +8,10 @@ use std::{
     str::FromStr,
 };
 
-use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take, take_till, take_while, take_while1},
+    bytes::complete::{tag, take_till, take_while, take_while1},
     combinator::{map_res, opt, verify},
-    error::ErrorKind,
     multi::{fold_many0, many0, separated_list0, separated_list1},
     sequence::{preceded, tuple},
     IResult,
@@ -449,15 +447,13 @@ pub fn freq(input: &str) -> IResult<&str, Frequency> {
     ))(input)
 }
 
-
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Result, Unstructured};
 
 use crate::weekday::{weekday, Weekday};
 
-use self::chrono_utils::{RecurEnd, enddate};
+use self::chrono_utils::{enddate, RecurEnd};
 use self::enum_utils::enum_element;
-
 
 // TODO FIXME this parser is not strictly correct in all cases namely when a shorter number would suffice
 pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
@@ -629,7 +625,11 @@ mod tests {
     use chrono::{DateTime, NaiveDate, Utc};
     use nom::{error::ErrorKind, IResult};
 
-    use crate::parser::{Frequency, RecurRule, Weekday, WeekdayNum, chrono_utils::{RRuleDateOrDateTime, RRuleDateTime, RecurEnd, date, datetime, enddate}, constant_rrule, freq, iana_param, iana_token, other_param, param_value, paramtext, rrule, rrulparams};
+    use crate::parser::{
+        chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
+        constant_rrule, freq, iana_param, iana_token, other_param, param_value, paramtext, rrule,
+        rrulparams, Frequency, RecurRule, Weekday, WeekdayNum,
+    };
 
     #[test]
     fn it_works() {
