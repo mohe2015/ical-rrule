@@ -808,8 +808,6 @@ mod tests {
         ));
         assert!(c != d);
 
-        assert!(Frequency::Minutely == Frequency::Minutely);
-
         // All examples assume the Eastern United States time zone.
 
         // Daily for 10 occurrences:
@@ -982,7 +980,7 @@ mod tests {
                 RecurRule {
                     freq: Frequency::Weekly,
                     end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(1997, 10, 07).and_hms(0, 0, 0), Utc)
+                        DateTime::from_utc(NaiveDate::from_ymd(1997, 10, 7).and_hms(0, 0, 0), Utc)
                     ))),
                     weekstart: Weekday::Sun,
                     byday: Some(vec![
