@@ -403,9 +403,21 @@ use arbitrary::{Arbitrary, Result, Unstructured};
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
-        let mut my_value = RRuleDateOrDateTime::Date(NaiveDate::from_ymd(1, 11, 1));
-
-        Ok(my_value)
+        match u.int_in_range(0..=1)? {
+            0 => Ok(RRuleDateOrDateTime::DateTime(RRuleDateTime::arbitrary(u)?)),
+            1 => {
+                // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L27
+                let year = u.int_in_range((i32::MIN >> 13)..=(i32::MAX >> 13))?;
+                // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L268
+                // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L173
+                let day = u.int_in_range(1..=366)?;
+                Ok(RRuleDateOrDateTime::Date(
+                    NaiveDate::from_yo_opt(year, day)
+                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                ))
+            }
+            _ => panic!("not possible")
+        }
     }
 }
 
