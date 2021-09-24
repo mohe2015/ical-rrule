@@ -1589,10 +1589,7 @@ mod tests {
                     freq: Frequency::Hourly,
                     interval: NonZeroU64::new(3).unwrap(),
                     end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(
-                            NaiveDate::from_ymd(1997, 09, 02).and_hms(17, 0, 0),
-                            Utc
-                        )
+                        DateTime::from_utc(NaiveDate::from_ymd(1997, 9, 2).and_hms(17, 0, 0), Utc)
                     ))),
                     ..Default::default()
                 }
