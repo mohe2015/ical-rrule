@@ -1,3 +1,4 @@
+use std::fmt;
 use std::{
     num::{NonZeroI16, NonZeroI8, NonZeroU64, NonZeroU8},
     ops::RangeBounds,
@@ -23,6 +24,23 @@ pub enum RecurEnd {
     Forever,
 }
 
+impl fmt::Display for RecurEnd {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            RecurEnd::Until(v) => match v {
+                RRuleDateOrDateTime::Date(d) => write!(f, ";UNTIL={}", d.format("%Y%m%d")),
+                RRuleDateOrDateTime::DateTime(d) => match d {
+                    RRuleDateTime::Utc(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
+                    RRuleDateTime::Unspecified(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
+                    RRuleDateTime::Offset(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")),
+                },
+            },
+            RecurEnd::Count(v) => write!(f, ";COUNT={}", v),
+            RecurEnd::Forever => Ok(()),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct WeekdayNum {
     //relative: WeekdayRelative,
@@ -45,6 +63,51 @@ pub struct RecurRule {
     bymonth: Option<Vec<NonZeroU8>>,
     bysetpos: Option<Vec<NonZeroI16>>,
     weekstart: Weekday,
+}
+
+impl fmt::Display for RecurRule {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let bysecondstring = match &self.bysecond {
+            Some(v) => ";BYSECOND=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let byminutestring = match &self.byminute {
+            Some(v) => ";BYMINUTE=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let byhourstring = match &self.byhour {
+            Some(v) => ";BYHOUR=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let bydaystring = match &self.byday {
+            Some(v) => ";BYDAY=".to_string() + &v.iter().map(|v| match v.ordwk {
+                Some(q) => q.to_string(),
+                None => "".to_string(),
+            } + &v.weekday.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let bymonthdaystring = match &self.bymonthday {
+            Some(v) => ";BYMONTHDAY=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let byyeardaystring = match &self.byyearday {
+            Some(v) => ";BYYEARDAY=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let byweeknostring = match &self.byweekno {
+            Some(v) => ";BYWEEKNO=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let bymonthstring = match &self.bymonth {
+            Some(v) => ";BYMONTH=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        let bysetposstring = match &self.bysetpos {
+            Some(v) => ";BYSETPOS=".to_string() + &v.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(", "),
+            None => "".to_string(),
+        };
+        write!(f, "RRULE:FREQ={}{};INTERVAL={}{}", self.freq, self.end, self.interval, bysecondstring)
+    }
 }
 
 impl Default for RecurRule {
@@ -140,6 +203,24 @@ pub enum Frequency {
     Weekly,
     Monthly,
     Yearly,
+}
+
+impl fmt::Display for Frequency {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Frequency::Secondly => "SECONDLY",
+                Frequency::Minutely => "MINUTELY",
+                Frequency::Hourly => "HOURLY",
+                Frequency::Daily => "DAILY",
+                Frequency::Weekly => "WEEKLY",
+                Frequency::Monthly => "MONTHLY",
+                Frequency::Yearly => "YEARLY",
+            }
+        )
+    }
 }
 
 pub const fn enum_element<'a, T: Copy>(
