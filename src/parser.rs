@@ -416,7 +416,7 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
                         .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
                 ))
             }
-            _ => panic!("not possible")
+            _ => panic!("not possible"),
         }
     }
 }
@@ -424,9 +424,32 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateTime {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
-        let mut my_value = unimplemented!();
-
-        Ok(my_value)
+        match u.int_in_range(0..=2)? {
+            0 => {
+                let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
+                Ok(RRuleDateTime::Offset(
+                    FixedOffset::east_opt(0)
+                        .and_then(|v| v.timestamp_opt(secs, 0).single())
+                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                ))
+            }
+            1 => {
+                let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
+                Ok(RRuleDateTime::Unspecified(
+                    NaiveDateTime::from_timestamp_opt(secs, 0)
+                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                ))
+            }
+            2 => {
+                let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
+                Ok(RRuleDateTime::Utc(DateTime::from_utc(
+                    NaiveDateTime::from_timestamp_opt(secs, 0)
+                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                    Utc,
+                )))
+            }
+            _ => panic!("not possible"),
+        }
     }
 }
 
