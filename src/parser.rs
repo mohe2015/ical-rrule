@@ -412,8 +412,7 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
                 // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L173
                 let day = u.int_in_range(1..=366)?;
                 Ok(RRuleDateOrDateTime::Date(
-                    NaiveDate::from_yo_opt(year, day)
-                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                    NaiveDate::from_yo_opt(year, day).ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
             _ => panic!("not possible"),
@@ -430,21 +429,21 @@ impl<'a> Arbitrary<'a> for RRuleDateTime {
                 Ok(RRuleDateTime::Offset(
                     FixedOffset::east_opt(0)
                         .and_then(|v| v.timestamp_opt(secs, 0).single())
-                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                        .ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
             1 => {
                 let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
                 Ok(RRuleDateTime::Unspecified(
                     NaiveDateTime::from_timestamp_opt(secs, 0)
-                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                        .ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
             2 => {
                 let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
                 Ok(RRuleDateTime::Utc(DateTime::from_utc(
                     NaiveDateTime::from_timestamp_opt(secs, 0)
-                        .ok_or_else(|| arbitrary::Error::IncorrectFormat)?,
+                        .ok_or(arbitrary::Error::IncorrectFormat)?,
                     Utc,
                 )))
             }
