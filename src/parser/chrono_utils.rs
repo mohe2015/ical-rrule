@@ -74,9 +74,9 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
                 let year = u.int_in_range(0..=9999)?;
                 // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L268
                 // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L173
-                let day = u.int_in_range(1..=366)?;
+                let day = u.int_in_range(1..=365)?;
                 Ok(RRuleDateOrDateTime::Date(
-                    NaiveDate::from_yo_opt(year, day).ok_or(arbitrary::Error::IncorrectFormat)?,
+                    NaiveDate::from_yo_opt(year, day).unwrap(), //ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
         }
@@ -101,15 +101,15 @@ impl<'a> Arbitrary<'a> for RRuleDateTime {
             Enum2::A => {
                 let secs = u.int_in_range(min..=max)?;
                 Ok(RRuleDateTime::Unspecified(
-                    NaiveDateTime::from_timestamp_opt(secs, 0)
-                        .ok_or(arbitrary::Error::IncorrectFormat)?,
+                    NaiveDateTime::from_timestamp_opt(secs, 0).unwrap(),
+                    //.ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
             Enum2::B => {
                 let secs = u.int_in_range(min..=max)?;
                 Ok(RRuleDateTime::Utc(DateTime::from_utc(
-                    NaiveDateTime::from_timestamp_opt(secs, 0)
-                        .ok_or(arbitrary::Error::IncorrectFormat)?,
+                    NaiveDateTime::from_timestamp_opt(secs, 0).unwrap(),
+                    //.ok_or(arbitrary::Error::IncorrectFormat)?,
                     Utc,
                 )))
             }

@@ -1027,6 +1027,27 @@ mod tests {
         assert!(rule != rule1);
         check(rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224");
 
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=YEARLY;FREQ=YEARLY").unwrap()
+        );
+
+        assert_eq!(
+            (
+                "",
+                RecurRule {
+                    freq: Frequency::Minutely,
+                    ..Default::default()
+                }
+            ),
+            rrule("RRULE:FREQ=MINUTELY;FREQ=YEARLY").unwrap()
+        );
+
         assert!(
             WeekdayNum {
                 ordwk: None,
