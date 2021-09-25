@@ -292,234 +292,247 @@ mod tests {
 
         // Daily until December 24, 1997:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Daily,
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+            ))),
+            ..Default::default()
+        };
+        assert_eq!("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z", rule.to_string());
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Daily,
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
-                    ))),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z").unwrap()
         );
 
         // Every other day - forever:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Daily,
+            interval: NonZeroU64::new(2).unwrap(),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Daily,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=DAILY;INTERVAL=2").unwrap()
         );
 
         // Every 10 days, 5 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Daily,
+            interval: NonZeroU64::new(10).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Daily,
-                    interval: NonZeroU64::new(10).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5").unwrap()
         );
 
         // Every day in January, for 3 years:
         // DTSTART;TZID=America/New_York:19980101T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc)
+            ))),
+            bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Sun
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Mon
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Wed
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Thu
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Fri
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Sat
+                }
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc)
-                    ))),
-                    bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Sun
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Mon
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Wed
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Thu
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Fri
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Sat
-                        }
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA")
                 .unwrap()
         );
+
+        let rule = RecurRule {
+            freq: Frequency::Daily,
+            bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc)
+            ))),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Daily,
-                    bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc)
-                    ))),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1").unwrap()
         );
 
         // Weekly for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;COUNT=10").unwrap()
         );
 
         // Weekly until December 24, 1997:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+            ))),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
-                    ))),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;UNTIL=19971224T000000Z").unwrap()
         );
 
         // Every other week - forever:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            interval: NonZeroU64::new(2).unwrap(),
+            weekstart: Weekday::Sun,
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    weekstart: Weekday::Sun,
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;WKST=SU").unwrap()
         );
 
         // Weekly on Tuesday and Thursday for five weeks:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(1997, 10, 7).and_hms(0, 0, 0), Utc)
+            ))),
+            weekstart: Weekday::Sun,
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Thu
+                },
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(1997, 10, 7).and_hms(0, 0, 0), Utc)
-                    ))),
-                    weekstart: Weekday::Sun,
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Thu
-                        },
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH").unwrap()
         );
 
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            weekstart: Weekday::Sun,
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Thu
+                },
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    weekstart: Weekday::Sun,
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Thu
-                        },
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH").unwrap()
         );
 
         // Every other week on Monday, Wednesday, and Friday until December 24, 1997, starting on Monday, September 1, 1997:
         // DTSTART;TZID=America/New_York:19970901T090000
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            interval: NonZeroU64::new(2).unwrap(),
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+            ))),
+            weekstart: Weekday::Sun,
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Mon
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Wed
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Fri
+                },
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
-                    ))),
-                    weekstart: Weekday::Sun,
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Mon
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Wed
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Fri
-                        },
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR")
                 .unwrap()
@@ -527,121 +540,127 @@ mod tests {
 
         // Every other week on Tuesday and Thursday, for 8 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            interval: NonZeroU64::new(2).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(8).unwrap()),
+            weekstart: Weekday::Sun,
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Thu
+                },
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(8).unwrap()),
-                    weekstart: Weekday::Sun,
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Thu
-                        },
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH").unwrap()
         );
 
         // Monthly on the first Friday for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970905T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            byday: Some(vec![WeekdayNum {
+                ordwk: Some(1),
+                weekday: Weekday::Fri
+            },]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: Some(1),
-                        weekday: Weekday::Fri
-                    },]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYDAY=1FR").unwrap()
         );
 
         // Monthly on the first Friday until December 24, 1997:
         // DTSTART;TZID=America/New_York:19970905T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
+            ))),
+            byday: Some(vec![WeekdayNum {
+                ordwk: Some(1),
+                weekday: Weekday::Fri
+            },]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc)
-                    ))),
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: Some(1),
-                        weekday: Weekday::Fri
-                    },]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR").unwrap()
         );
 
         // Every other month on the first and last Sunday of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970907T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            interval: NonZeroU64::new(2).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: Some(1),
+                    weekday: Weekday::Sun
+                },
+                WeekdayNum {
+                    ordwk: Some(-1),
+                    weekday: Weekday::Sun
+                }
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: Some(1),
-                            weekday: Weekday::Sun
-                        },
-                        WeekdayNum {
-                            ordwk: Some(-1),
-                            weekday: Weekday::Sun
-                        }
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU").unwrap()
         );
 
         // Monthly on the second-to-last Monday of the month for 6 months:
         // DTSTART;TZID=America/New_York:19970922T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
+            byday: Some(vec![WeekdayNum {
+                ordwk: Some(-2),
+                weekday: Weekday::Mon
+            }]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: Some(-2),
-                        weekday: Weekday::Mon
-                    }]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;COUNT=6;BYDAY=-2MO").unwrap()
         );
 
         // Monthly on the third-to-the-last day of the month, forever:
         // DTSTART;TZID=America/New_York:19970928T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            bymonthday: Some(vec![NonZeroI8::new(-3).unwrap()]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    bymonthday: Some(vec![NonZeroI8::new(-3).unwrap()]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=-3").unwrap()
         );
@@ -649,207 +668,218 @@ mod tests {
         // Monthly on the 2nd and 15th of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
         // RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            bymonthday: Some(vec![
+                NonZeroI8::new(2).unwrap(),
+                NonZeroI8::new(15).unwrap()
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    bymonthday: Some(vec![
-                        NonZeroI8::new(2).unwrap(),
-                        NonZeroI8::new(15).unwrap()
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15").unwrap()
         );
 
         // Monthly on the first and last day of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970930T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            bymonthday: Some(vec![
+                NonZeroI8::new(1).unwrap(),
+                NonZeroI8::new(-1).unwrap()
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    bymonthday: Some(vec![
-                        NonZeroI8::new(1).unwrap(),
-                        NonZeroI8::new(-1).unwrap()
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1").unwrap()
         );
 
         // Every 18 months on the 10th thru 15th of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970910T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            interval: NonZeroU64::new(18).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            bymonthday: Some(vec![
+                NonZeroI8::new(10).unwrap(),
+                NonZeroI8::new(11).unwrap(),
+                NonZeroI8::new(12).unwrap(),
+                NonZeroI8::new(13).unwrap(),
+                NonZeroI8::new(14).unwrap(),
+                NonZeroI8::new(15).unwrap(),
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    interval: NonZeroU64::new(18).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    bymonthday: Some(vec![
-                        NonZeroI8::new(10).unwrap(),
-                        NonZeroI8::new(11).unwrap(),
-                        NonZeroI8::new(12).unwrap(),
-                        NonZeroI8::new(13).unwrap(),
-                        NonZeroI8::new(14).unwrap(),
-                        NonZeroI8::new(15).unwrap(),
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15").unwrap()
         );
 
         // Every Tuesday, every other month:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            interval: NonZeroU64::new(2).unwrap(),
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Tue
+            }]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: None,
-                        weekday: Weekday::Tue
-                    }]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=TU").unwrap()
         );
 
         // Yearly in June and July for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970610T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            bymonth: Some(vec![NonZeroU8::new(6).unwrap(), NonZeroU8::new(7).unwrap(),]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    bymonth: Some(vec![NonZeroU8::new(6).unwrap(), NonZeroU8::new(7).unwrap(),]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7").unwrap()
         );
 
         // Every other year on January, February, and March for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970310T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            interval: NonZeroU64::new(2).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            bymonth: Some(vec![
+                NonZeroU8::new(1).unwrap(),
+                NonZeroU8::new(2).unwrap(),
+                NonZeroU8::new(3).unwrap(),
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    bymonth: Some(vec![
-                        NonZeroU8::new(1).unwrap(),
-                        NonZeroU8::new(2).unwrap(),
-                        NonZeroU8::new(3).unwrap(),
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3").unwrap()
         );
 
         // Every third year on the 1st, 100th, and 200th day for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970101T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            interval: NonZeroU64::new(3).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            byyearday: Some(vec![
+                NonZeroI16::new(1).unwrap(),
+                NonZeroI16::new(100).unwrap(),
+                NonZeroI16::new(200).unwrap(),
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    interval: NonZeroU64::new(3).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-                    byyearday: Some(vec![
-                        NonZeroI16::new(1).unwrap(),
-                        NonZeroI16::new(100).unwrap(),
-                        NonZeroI16::new(200).unwrap(),
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200").unwrap()
         );
 
         // Every 20th Monday of the year, forever:
         // DTSTART;TZID=America/New_York:19970519T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            byday: Some(vec![WeekdayNum {
+                ordwk: Some(20),
+                weekday: Weekday::Mon
+            }]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: Some(20),
-                        weekday: Weekday::Mon
-                    }]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;BYDAY=20MO").unwrap()
         );
 
         // Monday of week number 20 (where the default start of the week is Monday), forever:
         // DTSTART;TZID=America/New_York:19970512T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Mon
+            }]),
+            byweekno: Some(vec![NonZeroI8::new(20).unwrap(),]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: None,
-                        weekday: Weekday::Mon
-                    }]),
-                    byweekno: Some(vec![NonZeroI8::new(20).unwrap(),]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO").unwrap()
         );
 
         // Every Thursday in March, forever:
         // DTSTART;TZID=America/New_York:19970313T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            bymonth: Some(vec![NonZeroU8::new(3).unwrap(),]),
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Thu
+            }]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    bymonth: Some(vec![NonZeroU8::new(3).unwrap(),]),
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: None,
-                        weekday: Weekday::Thu
-                    }]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=TH").unwrap()
         );
 
         // Every Thursday, but only during June, July, and August, forever:
         // DTSTART;TZID=America/New_York:19970605T090000
+        let rule  =RecurRule {
+            freq: Frequency::Yearly,
+            bymonth: Some(vec![
+                NonZeroU8::new(6).unwrap(),
+                NonZeroU8::new(7).unwrap(),
+                NonZeroU8::new(8).unwrap(),
+            ]),
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Thu
+            }]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    bymonth: Some(vec![
-                        NonZeroU8::new(6).unwrap(),
-                        NonZeroU8::new(7).unwrap(),
-                        NonZeroU8::new(8).unwrap(),
-                    ]),
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: None,
-                        weekday: Weekday::Thu
-                    }]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8").unwrap()
         );
@@ -857,72 +887,75 @@ mod tests {
         // Every Friday the 13th, forever:
         // DTSTART;TZID=America/New_York:19970902T090000
         // EXDATE;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Fri
+            }]),
+            bymonthday: Some(vec![NonZeroI8::new(13).unwrap(),]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: None,
-                        weekday: Weekday::Fri
-                    }]),
-                    bymonthday: Some(vec![NonZeroI8::new(13).unwrap(),]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13").unwrap()
         );
 
         // The first Saturday that follows the first Sunday of the month, forever:
         // DTSTART;TZID=America/New_York:19970913T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Sat
+            }]),
+            bymonthday: Some(vec![
+                NonZeroI8::new(7).unwrap(),
+                NonZeroI8::new(8).unwrap(),
+                NonZeroI8::new(9).unwrap(),
+                NonZeroI8::new(10).unwrap(),
+                NonZeroI8::new(11).unwrap(),
+                NonZeroI8::new(12).unwrap(),
+                NonZeroI8::new(13).unwrap(),
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: None,
-                        weekday: Weekday::Sat
-                    }]),
-                    bymonthday: Some(vec![
-                        NonZeroI8::new(7).unwrap(),
-                        NonZeroI8::new(8).unwrap(),
-                        NonZeroI8::new(9).unwrap(),
-                        NonZeroI8::new(10).unwrap(),
-                        NonZeroI8::new(11).unwrap(),
-                        NonZeroI8::new(12).unwrap(),
-                        NonZeroI8::new(13).unwrap(),
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13").unwrap()
         );
 
         // Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day):
         // DTSTART;TZID=America/New_York:19961105T090000
+        let rule = RecurRule {
+            freq: Frequency::Yearly,
+            interval: NonZeroU64::new(4).unwrap(),
+            bymonth: Some(vec![NonZeroU8::new(11).unwrap(),]),
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Tue
+            }]),
+            bymonthday: Some(vec![
+                NonZeroI8::new(2).unwrap(),
+                NonZeroI8::new(3).unwrap(),
+                NonZeroI8::new(4).unwrap(),
+                NonZeroI8::new(5).unwrap(),
+                NonZeroI8::new(6).unwrap(),
+                NonZeroI8::new(7).unwrap(),
+                NonZeroI8::new(8).unwrap(),
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Yearly,
-                    interval: NonZeroU64::new(4).unwrap(),
-                    bymonth: Some(vec![NonZeroU8::new(11).unwrap(),]),
-                    byday: Some(vec![WeekdayNum {
-                        ordwk: None,
-                        weekday: Weekday::Tue
-                    }]),
-                    bymonthday: Some(vec![
-                        NonZeroI8::new(2).unwrap(),
-                        NonZeroI8::new(3).unwrap(),
-                        NonZeroI8::new(4).unwrap(),
-                        NonZeroI8::new(5).unwrap(),
-                        NonZeroI8::new(6).unwrap(),
-                        NonZeroI8::new(7).unwrap(),
-                        NonZeroI8::new(8).unwrap(),
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8")
                 .unwrap()
@@ -930,208 +963,218 @@ mod tests {
 
         // The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months:
         // DTSTART;TZID=America/New_York:19970904T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            end: RecurEnd::Count(NonZeroU64::new(3).unwrap()),
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Wed
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Thu
+                }
+            ]),
+            bysetpos: Some(vec![NonZeroI16::new(3).unwrap(),]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    end: RecurEnd::Count(NonZeroU64::new(3).unwrap()),
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Wed
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Thu
-                        }
-                    ]),
-                    bysetpos: Some(vec![NonZeroI16::new(3).unwrap(),]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3").unwrap()
         );
 
         //The second-to-last weekday of the month:
         // DTSTART;TZID=America/New_York:19970929T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Mon
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Wed
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Thu
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Fri
+                },
+            ]),
+            bysetpos: Some(vec![NonZeroI16::new(-2).unwrap(),]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Mon
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Wed
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Thu
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Fri
-                        },
-                    ]),
-                    bysetpos: Some(vec![NonZeroI16::new(-2).unwrap(),]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2").unwrap()
         );
 
         // Every 3 hours from 9:00 AM to 5:00 PM on a specific day:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Hourly,
+            interval: NonZeroU64::new(3).unwrap(),
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+                DateTime::from_utc(NaiveDate::from_ymd(1997, 9, 2).and_hms(17, 0, 0), Utc)
+            ))),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Hourly,
-                    interval: NonZeroU64::new(3).unwrap(),
-                    end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-                        DateTime::from_utc(NaiveDate::from_ymd(1997, 9, 2).and_hms(17, 0, 0), Utc)
-                    ))),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T170000Z").unwrap()
         );
 
         // Every 15 minutes for 6 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Minutely,
+            interval: NonZeroU64::new(15).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Minutely,
-                    interval: NonZeroU64::new(15).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6").unwrap()
         );
 
         // Every hour and a half for 4 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Minutely,
+            interval: NonZeroU64::new(90).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Minutely,
-                    interval: NonZeroU64::new(90).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4").unwrap()
         );
 
         // Every 20 minutes from 9:00 AM to 4:40 PM every day:
         // DTSTART;TZID=America/New_York:19970902T090000
+        let rule = RecurRule {
+            freq: Frequency::Daily,
+            byhour: Some(vec![9, 10, 11, 12, 13, 14, 15, 16]),
+            byminute: Some(vec![0, 20, 40]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Daily,
-                    byhour: Some(vec![9, 10, 11, 12, 13, 14, 15, 16]),
-                    byminute: Some(vec![0, 20, 40]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40").unwrap()
         );
 
+        let rule = RecurRule {
+            freq: Frequency::Minutely,
+            interval: NonZeroU64::new(20).unwrap(),
+            byhour: Some(vec![9, 10, 11, 12, 13, 14, 15, 16]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Minutely,
-                    interval: NonZeroU64::new(20).unwrap(),
-                    byhour: Some(vec![9, 10, 11, 12, 13, 14, 15, 16]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16").unwrap()
         );
 
         // An example where the days generated makes a difference because of WKST:
         // DTSTART;TZID=America/New_York:19970805T090000
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            interval: NonZeroU64::new(2).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Sun
+                },
+            ]),
+            weekstart: Weekday::Mon,
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Sun
-                        },
-                    ]),
-                    weekstart: Weekday::Mon,
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO").unwrap()
         );
 
+        let rule = RecurRule {
+            freq: Frequency::Weekly,
+            interval: NonZeroU64::new(2).unwrap(),
+            end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
+            byday: Some(vec![
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Tue
+                },
+                WeekdayNum {
+                    ordwk: None,
+                    weekday: Weekday::Sun
+                },
+            ]),
+            weekstart: Weekday::Sun,
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Weekly,
-                    interval: NonZeroU64::new(2).unwrap(),
-                    end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
-                    byday: Some(vec![
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Tue
-                        },
-                        WeekdayNum {
-                            ordwk: None,
-                            weekday: Weekday::Sun
-                        },
-                    ]),
-                    weekstart: Weekday::Sun,
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU").unwrap()
         );
 
         // An example where an invalid date (i.e., February 30) is ignored.
         // DTSTART;TZID=America/New_York:20070115T090000
+        let rule = RecurRule {
+            freq: Frequency::Monthly,
+            end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
+            bymonthday: Some(vec![
+                NonZeroI8::new(15).unwrap(),
+                NonZeroI8::new(30).unwrap(),
+            ]),
+            ..Default::default()
+        };
         assert_eq!(
             (
                 "",
-                RecurRule {
-                    freq: Frequency::Monthly,
-                    end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
-                    bymonthday: Some(vec![
-                        NonZeroI8::new(15).unwrap(),
-                        NonZeroI8::new(30).unwrap(),
-                    ]),
-                    ..Default::default()
-                }
+                rule
             ),
             rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5").unwrap()
         );
