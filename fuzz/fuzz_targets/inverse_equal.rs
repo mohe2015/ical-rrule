@@ -1,7 +1,7 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use ical_rrule::parser::RecurRule;
-use ical_rrule::parser::rrule;
+use ical_rrule::parser::recur_rule::RecurRule;
+use ical_rrule::parser::recur_rule::rrule;
 
 fuzz_target!(|data: RecurRule| {
     let val = data.to_string();
