@@ -5,6 +5,8 @@ use arbitrary::{Arbitrary, Result, Unstructured};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{branch::alt, bytes::complete::take, error::ErrorKind, IResult};
 
+use crate::parser::arbitrary_enums::Enum2;
+
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
@@ -63,9 +65,9 @@ pub enum RRuleDateOrDateTime {
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
-        match u.int_in_range(0..=1)? {
-            0 => Ok(RRuleDateOrDateTime::DateTime(RRuleDateTime::arbitrary(u)?)),
-            1 => {
+        match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => Ok(RRuleDateOrDateTime::DateTime(RRuleDateTime::arbitrary(u)?)),
+            Enum2::B => {
                 // https://github.com/chronotope/chrono/blob/3467172c31188006147585f6ed3727629d642fed/src/naive/internals.rs#L27
                 //let year = u.int_in_range((i32::MIN >> 13)..=(i32::MAX >> 13))?;
                 // we'll ical is stupid
@@ -77,7 +79,6 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
                     NaiveDate::from_yo_opt(year, day).ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
-            _ => unreachable!(),
         }
     }
 }
@@ -87,7 +88,7 @@ impl<'a> Arbitrary<'a> for RRuleDateTime {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
         let min = NaiveDate::from_yo(0, 1).and_hms(0, 0, 0).timestamp();
         let max = NaiveDate::from_yo(9999, 365).and_hms(0, 0, 0).timestamp();
-        match u.int_in_range(1..=2)? {
+        match u.choose(&[Enum2::A, Enum2::B])? {
             // seems to not be supported for ical
             /*0 => {
                 let secs = u.int_in_range(i64::MIN..=i64::MAX)?;
@@ -97,14 +98,14 @@ impl<'a> Arbitrary<'a> for RRuleDateTime {
                         .ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }*/
-            1 => {
+            Enum2::A => {
                 let secs = u.int_in_range(min..=max)?;
                 Ok(RRuleDateTime::Unspecified(
                     NaiveDateTime::from_timestamp_opt(secs, 0)
                         .ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
-            2 => {
+            Enum2::B => {
                 let secs = u.int_in_range(min..=max)?;
                 Ok(RRuleDateTime::Utc(DateTime::from_utc(
                     NaiveDateTime::from_timestamp_opt(secs, 0)
@@ -112,7 +113,6 @@ impl<'a> Arbitrary<'a> for RRuleDateTime {
                     Utc,
                 )))
             }
-            _ => unreachable!(),
         }
     }
 }

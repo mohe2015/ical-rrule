@@ -14,7 +14,10 @@ use nom::{
     IResult,
 };
 
-use crate::weekday::{weekday, Weekday};
+use crate::{
+    parser::arbitrary_enums::Enum2,
+    weekday::{weekday, Weekday},
+};
 
 use super::{
     chrono_utils::{enddate, RecurEnd},
@@ -46,9 +49,9 @@ impl<'a> Arbitrary<'a> for RecurRule {
         let freq = Frequency::arbitrary(u)?;
         let end = RecurEnd::arbitrary(u)?;
         let interval = NonZeroU64::arbitrary(u)?;
-        let bysecond = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let bysecond = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -57,11 +60,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let byminute = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let byminute = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -70,11 +72,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let byhour = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let byhour = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -83,18 +84,16 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let byday = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let byday = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
-                    let ordwk = match u.int_in_range(0..=1)? {
-                        0 => None,
-                        1 => Some(u.int_in_range(-53_i8..=53_i8)?),
-                        _ => unreachable!(),
+                    let ordwk = match u.choose(&[Enum2::A, Enum2::B])? {
+                        Enum2::A => None,
+                        Enum2::B => Some(u.int_in_range(-53_i8..=53_i8)?),
                     };
                     my_collection.push(WeekdayNum {
                         ordwk,
@@ -103,11 +102,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let bymonthday = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let bymonthday = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -119,11 +117,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let byyearday = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let byyearday = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -135,11 +132,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let bymonth = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let bymonth = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -148,11 +144,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let bysetpos = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let bysetpos = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -164,11 +159,10 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
-        let byweekno = match u.int_in_range(0..=1)? {
-            0 => None,
-            1 => {
+        let byweekno = match u.choose(&[Enum2::A, Enum2::B])? {
+            Enum2::A => None,
+            Enum2::B => {
                 let len = u.arbitrary_len::<u8>()?;
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
@@ -180,7 +174,6 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 }
                 Some(my_collection)
             }
-            _ => unreachable!(),
         };
         let weekstart = Weekday::arbitrary(u)?;
 

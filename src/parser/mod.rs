@@ -1,3 +1,4 @@
+pub mod arbitrary_enums;
 pub mod chrono_utils;
 pub mod enum_utils;
 pub mod frequency;
