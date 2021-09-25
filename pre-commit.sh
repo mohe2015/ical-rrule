@@ -13,11 +13,10 @@ cargo fmt -- --check
 cargo test
 cargo clippy
 cargo profdata -- merge -sparse default.profraw -o default.profdata
-rm -f target/debug/deps/*.d
-cargo cov -- show --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-* --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
-cargo cov -- show --format=html --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-* --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+cargo cov -- show --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object $(cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]") --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+cargo cov -- show --format=html --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object $(cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]") --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
 firefox target/debug/coverage/index.html
-cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object target/debug/deps/ical_rrule-*
+cargo cov -- report --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object $(cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]")
 
 # bad coverage for unused instantiations
 #~/.cargo/bin/grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/grcov/

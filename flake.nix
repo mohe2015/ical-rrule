@@ -14,10 +14,7 @@
               pkgs.bashInteractive # fix nested shells
               pkgs.pkg-config
               pkgs.gnumake
-              pkgs.llvmPackages_12.clang
-              pkgs.llvmPackages_12.llvm
-              pkgs.llvmPackages_12.llvm.dev
-              pkgs.llvmPackages_12.lld
+              pkgs.jq
             ];
 
             buildInputs = [
