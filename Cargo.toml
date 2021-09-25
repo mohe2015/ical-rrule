@@ -9,6 +9,7 @@ edition = "2021"
 nom = "7"
 chrono = "0.4"
 arbitrary = { version = "1", optional = true, features = ["derive"] }
+rand = "0.8"
 
 [features]
-#default = ["arbitrary"] # only uncomment if needed - seems to break code coverage
+default = ["arbitrary"] # only uncomment if needed - seems to break code coverage
