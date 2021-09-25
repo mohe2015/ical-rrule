@@ -305,18 +305,18 @@ impl fmt::Display for RecurRule {
             f,
             "RRULE:FREQ={}{}{}{}{}{}{}{}{}{}{}{}{}",
             self.freq,
-            self.end,
             intervalstring,
+            self.end,
             bysecondstring,
             byminutestring,
             byhourstring,
+            bymonthstring,
+            weekstartstring,
+            byweeknostring,
             bydaystring,
             bymonthdaystring,
             byyeardaystring,
-            byweeknostring,
-            bymonthstring,
             bysetposstring,
-            weekstartstring
         )
     }
 }

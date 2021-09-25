@@ -276,6 +276,15 @@ mod tests {
         assert!(c != d);
     }
 
+    fn check(rule: RecurRule, to_string: &str) {
+        assert_eq!(to_string, rule.to_string());
+        assert_eq!(
+            ("", rule),
+            rrule(to_string)
+                .unwrap()
+        );
+    }
+
     #[test]
     fn examples() {
         // All examples assume the Eastern United States time zone.
@@ -287,8 +296,7 @@ mod tests {
             end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
             ..Default::default()
         };
-        assert_eq!("RRULE:FREQ=DAILY;COUNT=10", rule.to_string());
-        assert_eq!(("", rule), rrule("RRULE:FREQ=DAILY;COUNT=10").unwrap());
+        check(rule, "RRULE:FREQ=DAILY;COUNT=10");
 
         // Daily until December 24, 1997:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -299,11 +307,7 @@ mod tests {
             ))),
             ..Default::default()
         };
-        assert_eq!("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z", rule.to_string());
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=DAILY;UNTIL=19971224T000000Z").unwrap()
-        );
+        check(rule, "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z");
 
         // Every other day - forever:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -312,7 +316,7 @@ mod tests {
             interval: NonZeroU64::new(2).unwrap(),
             ..Default::default()
         };
-        assert_eq!(("", rule), rrule("RRULE:FREQ=DAILY;INTERVAL=2").unwrap());
+        check(rule, "RRULE:FREQ=DAILY;INTERVAL=2");
 
         // Every 10 days, 5 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -322,10 +326,7 @@ mod tests {
             end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5").unwrap()
-        );
+        check(rule, "RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5");
 
         // Every day in January, for 3 years:
         // DTSTART;TZID=America/New_York:19980101T090000
@@ -367,11 +368,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA")
-                .unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA");
 
         let rule = RecurRule {
             freq: Frequency::Daily,
@@ -381,10 +378,7 @@ mod tests {
             ))),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1").unwrap()
-        );
+        check(rule, "RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1");
 
         // Weekly for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -393,7 +387,7 @@ mod tests {
             end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
             ..Default::default()
         };
-        assert_eq!(("", rule), rrule("RRULE:FREQ=WEEKLY;COUNT=10").unwrap());
+        check(rule, "RRULE:FREQ=WEEKLY;COUNT=10");
 
         // Weekly until December 24, 1997:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -404,10 +398,7 @@ mod tests {
             ))),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;UNTIL=19971224T000000Z").unwrap()
-        );
+        check(rule, "RRULE:FREQ=WEEKLY;UNTIL=19971224T000000Z");
 
         // Every other week - forever:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -417,10 +408,7 @@ mod tests {
             weekstart: Weekday::Sun,
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;WKST=SU").unwrap()
-        );
+        check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;WKST=SU");
 
         // Weekly on Tuesday and Thursday for five weeks:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -442,10 +430,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH").unwrap()
-        );
+        check(rule, "RRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH");
 
         let rule = RecurRule {
             freq: Frequency::Weekly,
@@ -463,10 +448,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH").unwrap()
-        );
+        check(rule, "RRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH");
 
         // Every other week on Monday, Wednesday, and Friday until December 24, 1997, starting on Monday, September 1, 1997:
         // DTSTART;TZID=America/New_York:19970901T090000
@@ -493,11 +475,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR")
-                .unwrap()
-        );
+        check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR");
 
         // Every other week on Tuesday and Thursday, for 8 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -518,10 +496,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH").unwrap()
-        );
+        check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH");
 
         // Monthly on the first Friday for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970905T090000
@@ -534,10 +509,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYDAY=1FR").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYDAY=1FR");
 
         // Monthly on the first Friday until December 24, 1997:
         // DTSTART;TZID=America/New_York:19970905T090000
@@ -552,10 +524,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR");
 
         // Every other month on the first and last Sunday of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970907T090000
@@ -575,10 +544,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU");
 
         // Monthly on the second-to-last Monday of the month for 6 months:
         // DTSTART;TZID=America/New_York:19970922T090000
@@ -591,10 +557,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;COUNT=6;BYDAY=-2MO").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;COUNT=6;BYDAY=-2MO");
 
         // Monthly on the third-to-the-last day of the month, forever:
         // DTSTART;TZID=America/New_York:19970928T090000
@@ -603,10 +566,7 @@ mod tests {
             bymonthday: Some(vec![NonZeroI8::new(-3).unwrap()]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=-3").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;BYMONTHDAY=-3");
 
         // Monthly on the 2nd and 15th of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -620,10 +580,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15");
 
         // Monthly on the first and last day of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970930T090000
@@ -636,10 +593,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1");
 
         // Every 18 months on the 10th thru 15th of the month for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970910T090000
@@ -657,10 +611,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15");
 
         // Every Tuesday, every other month:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -673,10 +624,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=TU").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=TU");
 
         // Yearly in June and July for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970610T090000
@@ -686,10 +634,7 @@ mod tests {
             bymonth: Some(vec![NonZeroU8::new(6).unwrap(), NonZeroU8::new(7).unwrap()]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7").unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7");
 
         // Every other year on January, February, and March for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970310T090000
@@ -704,10 +649,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3").unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3");
 
         // Every third year on the 1st, 100th, and 200th day for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970101T090000
@@ -722,10 +664,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200").unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200");
 
         // Every 20th Monday of the year, forever:
         // DTSTART;TZID=America/New_York:19970519T090000
@@ -737,7 +676,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        assert_eq!(("", rule), rrule("RRULE:FREQ=YEARLY;BYDAY=20MO").unwrap());
+        check(rule, "RRULE:FREQ=YEARLY;BYDAY=20MO");
 
         // Monday of week number 20 (where the default start of the week is Monday), forever:
         // DTSTART;TZID=America/New_York:19970512T090000
@@ -750,10 +689,7 @@ mod tests {
             byweekno: Some(vec![NonZeroI8::new(20).unwrap()]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO").unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO");
 
         // Every Thursday in March, forever:
         // DTSTART;TZID=America/New_York:19970313T090000
@@ -766,10 +702,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=TH").unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=TH");
 
         // Every Thursday, but only during June, July, and August, forever:
         // DTSTART;TZID=America/New_York:19970605T090000
@@ -786,10 +719,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8").unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8");
 
         // Every Friday the 13th, forever:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -803,10 +733,7 @@ mod tests {
             bymonthday: Some(vec![NonZeroI8::new(13).unwrap()]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13");
 
         // The first Saturday that follows the first Sunday of the month, forever:
         // DTSTART;TZID=America/New_York:19970913T090000
@@ -827,10 +754,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13").unwrap()
-        );
+        check(rule, "RRULE:FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13");
 
         // Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day):
         // DTSTART;TZID=America/New_York:19961105T090000
@@ -853,11 +777,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!(
-            ("", rule),
-            rrule("RRULE:FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8")
-                .unwrap()
-        );
+        check(rule, "RRULE:FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8");
 
         // The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months:
         // DTSTART;TZID=America/New_York:19970904T090000
@@ -881,6 +801,7 @@ mod tests {
             bysetpos: Some(vec![NonZeroI16::new(3).unwrap()]),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3").unwrap()
@@ -915,6 +836,7 @@ mod tests {
             bysetpos: Some(vec![NonZeroI16::new(-2).unwrap()]),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2").unwrap()
@@ -930,6 +852,7 @@ mod tests {
             ))),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T170000Z").unwrap()
@@ -943,6 +866,7 @@ mod tests {
             end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6").unwrap()
@@ -956,6 +880,7 @@ mod tests {
             end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4").unwrap()
@@ -969,6 +894,7 @@ mod tests {
             byminute: Some(vec![0, 20, 40]),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40").unwrap()
@@ -980,6 +906,7 @@ mod tests {
             byhour: Some(vec![9, 10, 11, 12, 13, 14, 15, 16]),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16").unwrap()
@@ -1004,6 +931,7 @@ mod tests {
             weekstart: Weekday::Mon,
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO").unwrap()
@@ -1026,6 +954,7 @@ mod tests {
             weekstart: Weekday::Sun,
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU").unwrap()
@@ -1042,6 +971,7 @@ mod tests {
             ]),
             ..Default::default()
         };
+        assert_eq!("", rule.to_string());
         assert_eq!(
             ("", rule),
             rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5").unwrap()
