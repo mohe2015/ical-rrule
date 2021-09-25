@@ -719,7 +719,12 @@ mod tests {
             }]),
             ..Default::default()
         };
-        // TODO FIXME check(rule, "RRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8");
+        assert_eq!("RRULE:FREQ=YEARLY;BYMONTH=6,7,8;BYDAY=TH", rule.to_string());
+        assert_eq!(
+            ("", rule),
+            rrule("RRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8")
+                .unwrap()
+        );
 
         // Every Friday the 13th, forever:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -903,7 +908,12 @@ mod tests {
             weekstart: Weekday::Mon,
             ..Default::default()
         };
-        // TODO FIXME check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO");
+        assert_eq!("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU", rule.to_string());
+        assert_eq!(
+            ("", rule),
+            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO")
+                .unwrap()
+        );
 
         let rule = RecurRule {
             freq: Frequency::Weekly,
@@ -922,7 +932,12 @@ mod tests {
             weekstart: Weekday::Sun,
             ..Default::default()
         };
-        //check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU");
+        assert_eq!("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;WKST=SU;BYDAY=TU,SU", rule.to_string());
+        assert_eq!(
+            ("", rule),
+            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU")
+                .unwrap()
+        );
 
         // An example where an invalid date (i.e., February 30) is ignored.
         // DTSTART;TZID=America/New_York:20070115T090000
@@ -935,6 +950,11 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5");
+        assert_eq!("RRULE:FREQ=MONTHLY;COUNT=5;BYMONTHDAY=15,30", rule.to_string());
+        assert_eq!(
+            ("", rule),
+            rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5")
+                .unwrap()
+        );
     }
 }
