@@ -2,7 +2,7 @@ use std::{fmt, num::NonZeroU64};
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Result, Unstructured};
-use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{branch::alt, bytes::complete::take, error::ErrorKind, IResult};
 
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
@@ -23,8 +23,7 @@ impl fmt::Display for RecurEnd {
                     RRuleDateTime::Utc(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%SZ")),
                     RRuleDateTime::Unspecified(dt) => {
                         write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S"))
-                    }
-                    RRuleDateTime::Offset(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")), // TODO FIXME
+                    } //RRuleDateTime::Offset(dt) => write!(f, ";UNTIL={}", dt.format("%Y%m%dT%H%M%S")), // TODO FIXME
                 },
             },
             RecurEnd::Count(v) => write!(f, ";COUNT={}", v),
@@ -52,7 +51,7 @@ pub fn date(input: &str) -> IResult<&str, NaiveDate> {
 pub enum RRuleDateTime {
     Utc(DateTime<Utc>),
     Unspecified(NaiveDateTime),
-    Offset(DateTime<FixedOffset>),
+    //Offset(DateTime<FixedOffset>),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -143,7 +142,7 @@ fn datetime_unspecified(input: &str) -> IResult<&str, RRuleDateTime> {
         })),
     }
 }
-
+/*
 fn datetime_timezone(input: &str) -> IResult<&str, RRuleDateTime> {
     Err(nom::Err::Error(nom::error::Error {
         input, // TODO FIXME
@@ -163,10 +162,14 @@ fn datetime_timezone(input: &str) -> IResult<&str, RRuleDateTime> {
         })),
     }*/
 }
+*/
 
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5
 pub fn datetime(input: &str) -> IResult<&str, RRuleDateTime> {
-    alt((datetime_utc, datetime_unspecified, datetime_timezone))(input)
+    alt((
+        datetime_utc,
+        datetime_unspecified, /*, datetime_timezone*/
+    ))(input)
 }
 
 pub fn enddate(input: &str) -> IResult<&str, RRuleDateOrDateTime> {

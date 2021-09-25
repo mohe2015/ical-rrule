@@ -226,13 +226,13 @@ mod tests {
             datetime("20210920T00000"),
             Err(nom::Err::Error(nom::error::Error {
                 input: "20210920T00000",
-                code: ErrorKind::Fail
+                code: ErrorKind::Eof
             }))
         );
         assert_eq!(
             datetime("20210920Q000000"),
             Err(nom::Err::Error(nom::error::Error {
-                input: "20210920Q000000",
+                input: "",
                 code: ErrorKind::Fail
             }))
         );
@@ -990,5 +990,16 @@ mod tests {
             ("", rule),
             rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5").unwrap()
         );
+
+        // coverage rules
+        let rule = RecurRule {
+            freq: Frequency::Secondly,
+            bysecond: Some(vec![]),
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
+                NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0),
+            ))),
+            ..Default::default()
+        };
+        check(rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224T000000;BYSECOND=");
     }
 }
