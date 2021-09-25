@@ -278,11 +278,7 @@ mod tests {
 
     fn check(rule: RecurRule, to_string: &str) {
         assert_eq!(to_string, rule.to_string());
-        assert_eq!(
-            ("", rule),
-            rrule(to_string)
-                .unwrap()
-        );
+        assert_eq!(("", rule), rrule(to_string).unwrap());
     }
 
     #[test]
@@ -368,7 +364,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA");
+        check(
+            rule,
+            "RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+        );
 
         let rule = RecurRule {
             freq: Frequency::Daily,
@@ -430,7 +429,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH");
+        check(
+            rule,
+            "RRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH",
+        );
 
         let rule = RecurRule {
             freq: Frequency::Weekly,
@@ -475,7 +477,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR");
+        check(
+            rule,
+            "RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR",
+        );
 
         // Every other week on Tuesday and Thursday, for 8 occurrences:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -496,7 +501,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH");
+        check(
+            rule,
+            "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH",
+        );
 
         // Monthly on the first Friday for 10 occurrences:
         // DTSTART;TZID=America/New_York:19970905T090000
@@ -544,7 +552,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU");
+        check(
+            rule,
+            "RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU",
+        );
 
         // Monthly on the second-to-last Monday of the month for 6 months:
         // DTSTART;TZID=America/New_York:19970922T090000
@@ -611,7 +622,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15");
+        check(
+            rule,
+            "RRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15",
+        );
 
         // Every Tuesday, every other month:
         // DTSTART;TZID=America/New_York:19970902T090000
@@ -664,7 +678,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200");
+        check(
+            rule,
+            "RRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200",
+        );
 
         // Every 20th Monday of the year, forever:
         // DTSTART;TZID=America/New_York:19970519T090000
@@ -722,8 +739,7 @@ mod tests {
         assert_eq!("RRULE:FREQ=YEARLY;BYMONTH=6,7,8;BYDAY=TH", rule.to_string());
         assert_eq!(
             ("", rule),
-            rrule("RRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8")
-                .unwrap()
+            rrule("RRULE:FREQ=YEARLY;BYDAY=TH;BYMONTH=6,7,8").unwrap()
         );
 
         // Every Friday the 13th, forever:
@@ -759,7 +775,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13");
+        check(
+            rule,
+            "RRULE:FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13",
+        );
 
         // Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day):
         // DTSTART;TZID=America/New_York:19961105T090000
@@ -782,7 +801,10 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8");
+        check(
+            rule,
+            "RRULE:FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8",
+        );
 
         // The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months:
         // DTSTART;TZID=America/New_York:19970904T090000
@@ -879,7 +901,10 @@ mod tests {
             byminute: Some(vec![0, 20, 40]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40");
+        check(
+            rule,
+            "RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40",
+        );
 
         let rule = RecurRule {
             freq: Frequency::Minutely,
@@ -887,7 +912,10 @@ mod tests {
             byhour: Some(vec![9, 10, 11, 12, 13, 14, 15, 16]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16");
+        check(
+            rule,
+            "RRULE:FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16",
+        );
 
         // An example where the days generated makes a difference because of WKST:
         // DTSTART;TZID=America/New_York:19970805T090000
@@ -908,11 +936,13 @@ mod tests {
             weekstart: Weekday::Mon,
             ..Default::default()
         };
-        assert_eq!("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU", rule.to_string());
+        assert_eq!(
+            "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU",
+            rule.to_string()
+        );
         assert_eq!(
             ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO")
-                .unwrap()
+            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO").unwrap()
         );
 
         let rule = RecurRule {
@@ -932,11 +962,13 @@ mod tests {
             weekstart: Weekday::Sun,
             ..Default::default()
         };
-        assert_eq!("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;WKST=SU;BYDAY=TU,SU", rule.to_string());
+        assert_eq!(
+            "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;WKST=SU;BYDAY=TU,SU",
+            rule.to_string()
+        );
         assert_eq!(
             ("", rule),
-            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU")
-                .unwrap()
+            rrule("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU").unwrap()
         );
 
         // An example where an invalid date (i.e., February 30) is ignored.
@@ -950,11 +982,13 @@ mod tests {
             ]),
             ..Default::default()
         };
-        assert_eq!("RRULE:FREQ=MONTHLY;COUNT=5;BYMONTHDAY=15,30", rule.to_string());
+        assert_eq!(
+            "RRULE:FREQ=MONTHLY;COUNT=5;BYMONTHDAY=15,30",
+            rule.to_string()
+        );
         assert_eq!(
             ("", rule),
-            rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5")
-                .unwrap()
+            rrule("RRULE:FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5").unwrap()
         );
     }
 }
