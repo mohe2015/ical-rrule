@@ -994,7 +994,7 @@ mod tests {
         );
 
         // coverage rules
-        let rule = RecurRule {
+        let rule1 = RecurRule {
             freq: Frequency::Secondly,
             bysecond: Some(vec![]),
             end: RecurEnd::Until(
@@ -1013,17 +1013,28 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule.clone(),
+            rule1.clone(),
             "RRULE:FREQ=SECONDLY;UNTIL=19971224T000000;BYSECOND=;BYDAY=MO",
         );
-        format!("{:?}", rule);
+        format!("{:?}", rule1);
 
         let rule = RecurRule {
             freq: Frequency::Secondly,
             end: RecurEnd::Until(RRuleDateOrDateTime::Date(NaiveDate::from_ymd(1997, 12, 24))),
             ..Default::default()
         };
+        assert!(rule != rule1);
         check(rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224");
+
+        assert!(
+            WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Mon
+            } != WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Tue
+            }
+        );
 
         // to get coverage in arbitary impl because coverage is stupid and doesn't ignore it when the feature is disabled
         for _ in 0..10240 {
@@ -1047,6 +1058,20 @@ mod tests {
                 let _ = unstructured.arbitrary_len::<Weekday>();
                 let _ = unstructured.arbitrary_len::<RecurEnd>();
                 let _ = unstructured.arbitrary_len::<Frequency>();
+                let a = unstructured.arbitrary_take_rest_iter::<Weekday>();
+                if let Ok(mut b) = a {
+                    let _ = b.next();
+                }
+                let unstructured = Unstructured::new(&data);
+                let a = unstructured.arbitrary_take_rest_iter::<RecurEnd>();
+                if let Ok(mut b) = a {
+                    let _ = b.next();
+                }
+                let unstructured = Unstructured::new(&data);
+                let a = unstructured.arbitrary_take_rest_iter::<Frequency>();
+                if let Ok(mut b) = a {
+                    let _ = b.next();
+                }
             }
         }
     }
