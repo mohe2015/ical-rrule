@@ -89,7 +89,7 @@ mod tests {
     use arbitrary::{Arbitrary, Unstructured};
     use chrono::{DateTime, NaiveDate, Utc};
     use nom::{error::ErrorKind, IResult};
-    use rand::RngCore;
+    use rand::{Rng, RngCore};
 
     use crate::parser::{
         chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
@@ -1009,22 +1009,26 @@ mod tests {
             end: RecurEnd::Until(RRuleDateOrDateTime::Date(NaiveDate::from_ymd(1997, 12, 24))),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224");
+        check(rule.clone(), "RRULE:FREQ=SECONDLY;UNTIL=19971224");
+        format!("{:?}", rule);
 
-        let mut data = vec![0; 1024];
-        loop {
-            rand::thread_rng().fill_bytes(&mut data);
+        // to get coverage in arbitary impl because coverage is stupid and doesn't ignore it when the feature is disabled
+        for _ in 0..10240 {
+            loop {
+                let mut data = vec![0; rand::thread_rng().gen_range(0..1024)];
+                rand::thread_rng().fill_bytes(&mut data);
 
-            // Wrap it in an `Unstructured`.
-            let mut unstructured = Unstructured::new(&data);
+                // Wrap it in an `Unstructured`.
+                let mut unstructured = Unstructured::new(&data);
 
-            if let Ok(recur_rule) = RecurRule::arbitrary(&mut unstructured) {
-                let val = recur_rule.to_string();
-                let parsed = rrule(&val);
-                assert_eq!(Ok(("", recur_rule)), parsed);
-                break;
-            } else {
-                println!("random generation failed - trying again");
+                if let Ok(recur_rule) = RecurRule::arbitrary(&mut unstructured) {
+                    let val = recur_rule.to_string();
+                    let parsed = rrule(&val);
+                    assert_eq!(Ok(("", recur_rule)), parsed);
+                    break;
+                } else {
+                    println!("random generation failed - trying again");
+                }
             }
         }
     }

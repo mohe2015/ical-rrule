@@ -77,7 +77,7 @@ impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
                     NaiveDate::from_yo_opt(year, day).ok_or(arbitrary::Error::IncorrectFormat)?,
                 ))
             }
-            _ => panic!("not possible"),
+            _ => unreachable!(),
         }
     }
 }
@@ -112,7 +112,7 @@ impl<'a> Arbitrary<'a> for RRuleDateTime {
                     Utc,
                 )))
             }
-            _ => panic!("not possible"),
+            _ => unreachable!(),
         }
     }
 }
