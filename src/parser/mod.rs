@@ -997,20 +997,33 @@ mod tests {
         let rule = RecurRule {
             freq: Frequency::Secondly,
             bysecond: Some(vec![]),
-            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
-                NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0),
-            ))),
+            end: RecurEnd::Until(
+                RRuleDateOrDateTime::DateTime(
+                    RRuleDateTime::Unspecified(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0))
+                        .clone(),
+                )
+                .clone(),
+            )
+            .clone(),
+            byday: Some(vec![WeekdayNum {
+                ordwk: None,
+                weekday: Weekday::Mon,
+            }
+            .clone()]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224T000000;BYSECOND=");
+        check(
+            rule.clone(),
+            "RRULE:FREQ=SECONDLY;UNTIL=19971224T000000;BYSECOND=;BYDAY=MO",
+        );
+        format!("{:?}", rule);
 
         let rule = RecurRule {
             freq: Frequency::Secondly,
             end: RecurEnd::Until(RRuleDateOrDateTime::Date(NaiveDate::from_ymd(1997, 12, 24))),
             ..Default::default()
         };
-        check(rule.clone(), "RRULE:FREQ=SECONDLY;UNTIL=19971224");
-        format!("{:?}", rule);
+        check(rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224");
 
         // to get coverage in arbitary impl because coverage is stupid and doesn't ignore it when the feature is disabled
         for _ in 0..10240 {
@@ -1029,6 +1042,11 @@ mod tests {
                 } else {
                     println!("random generation failed - trying again");
                 }
+
+                let mut unstructured = Unstructured::new(&data);
+                let _ = unstructured.arbitrary_len::<Weekday>();
+                let _ = unstructured.arbitrary_len::<RecurEnd>();
+                let _ = unstructured.arbitrary_len::<Frequency>();
             }
         }
     }
