@@ -80,12 +80,14 @@ jobs:
 
           //console.log(`${COVERAGE_SUMMARY}`)
 
-          console.log(await github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: "```\n" + data + "```"
-          }))
+          if (context.issue.number) {
+            console.log(await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "```\n" + data + "```"
+            }))
+          }
           /*
           console.log(await github.rest.repos.createCommitStatus({
             owner: context.repo.owner,
