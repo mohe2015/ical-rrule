@@ -91,5 +91,6 @@ jobs:
             repo: context.repo.repo,
             name: "Changes detected",
             head_sha: context.sha,
-            conclusion: "action_required",
+            status: 'in_progress',
+            //conclusion: "action_required",
           }) 
