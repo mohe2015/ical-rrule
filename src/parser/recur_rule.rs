@@ -1,6 +1,6 @@
 use std::{
     fmt,
-    num::{NonZeroI16, NonZeroI8, NonZeroU64, NonZeroU8},
+    num::{NonZeroI16, NonZeroI8, NonZeroU32, NonZeroU8},
 };
 
 #[cfg(feature = "arbitrary")]
@@ -28,19 +28,19 @@ use super::{
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct RecurRule {
-    pub(super) freq: Frequency,
-    pub(super) end: RecurEnd,
-    pub(super) interval: NonZeroU64,
-    pub(super) bysecond: Option<Vec<u8>>,
-    pub(super) byminute: Option<Vec<u8>>,
-    pub(super) byhour: Option<Vec<u8>>,
-    pub(super) byday: Option<Vec<WeekdayNum>>,
-    pub(super) bymonthday: Option<Vec<NonZeroI8>>,
-    pub(super) byyearday: Option<Vec<NonZeroI16>>,
-    pub(super) byweekno: Option<Vec<NonZeroI8>>,
-    pub(super) bymonth: Option<Vec<NonZeroU8>>,
-    pub(super) bysetpos: Option<Vec<NonZeroI16>>,
-    pub(super) weekstart: Weekday,
+    pub(crate) freq: Frequency,
+    pub(crate) end: RecurEnd,
+    pub(crate) interval: NonZeroU32,
+    pub(crate) bysecond: Option<Vec<u8>>,
+    pub(crate) byminute: Option<Vec<u8>>,
+    pub(crate) byhour: Option<Vec<u8>>,
+    pub(crate) byday: Option<Vec<WeekdayNum>>,
+    pub(crate) bymonthday: Option<Vec<NonZeroI8>>,
+    pub(crate) byyearday: Option<Vec<NonZeroI16>>,
+    pub(crate) byweekno: Option<Vec<NonZeroI8>>,
+    pub(crate) bymonth: Option<Vec<NonZeroU8>>,
+    pub(crate) bysetpos: Option<Vec<NonZeroI16>>,
+    pub(crate) weekstart: Weekday,
 }
 
 #[cfg(feature = "arbitrary")]
@@ -48,7 +48,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
         let freq = Frequency::arbitrary(u)?;
         let end = RecurEnd::arbitrary(u)?;
-        let interval = NonZeroU64::arbitrary(u)?;
+        let interval = NonZeroU32::arbitrary(u)?;
         let bysecond = match u.choose(&[Enum2::A, Enum2::B])? {
             Enum2::A => None,
             Enum2::B => {
@@ -284,7 +284,7 @@ impl fmt::Display for RecurRule {
             }
             None => "".to_string(),
         };
-        let intervalstring = if self.interval == NonZeroU64::new(1).unwrap() {
+        let intervalstring = if self.interval == NonZeroU32::new(1).unwrap() {
             "".to_string()
         } else {
             ";INTERVAL=".to_string() + &self.interval.to_string()
@@ -319,7 +319,7 @@ impl Default for RecurRule {
         RecurRule {
             freq: Frequency::Yearly, // TODO FIXME no default
             end: RecurEnd::Forever,
-            interval: NonZeroU64::new(1).unwrap(),
+            interval: NonZeroU32::new(1).unwrap(),
             bysecond: None,
             byminute: None,
             byhour: None,
@@ -337,7 +337,7 @@ impl Default for RecurRule {
 enum RecurRulePart {
     Freq(Frequency),
     End(RecurEnd),
-    Interval(NonZeroU64),
+    Interval(NonZeroU32),
     Bysecond(Vec<u8>),
     Byminute(Vec<u8>),
     Byhour(Vec<u8>),
@@ -366,7 +366,7 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         nom::combinator::map(
             preceded(
                 tag("INTERVAL="),
-                digits(std::num::NonZeroU64::new(1).unwrap()..),
+                digits(std::num::NonZeroU32::new(1).unwrap()..),
             ),
             RecurRulePart::Interval,
         ),

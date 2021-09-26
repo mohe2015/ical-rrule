@@ -56,10 +56,24 @@ pub enum RRuleDateTime {
     //Offset(DateTime<FixedOffset>),
 }
 
+pub fn datetime_to_utc(date_time: RRuleDateTime) -> DateTime<Utc> {
+    match date_time {
+        RRuleDateTime::Utc(v) => v,
+        RRuleDateTime::Unspecified(v) => DateTime::from_utc(v, Utc),
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum RRuleDateOrDateTime {
     Date(NaiveDate),
     DateTime(RRuleDateTime),
+}
+
+pub fn date_or_datetime_to_utc(date_or_date_time: RRuleDateOrDateTime) -> DateTime<Utc> {
+    match date_or_date_time {
+        RRuleDateOrDateTime::Date(v) => DateTime::from_utc(v.and_hms(0, 0, 0), Utc),
+        RRuleDateOrDateTime::DateTime(v) => datetime_to_utc(v),
+    }
 }
 
 #[cfg(feature = "arbitrary")]
