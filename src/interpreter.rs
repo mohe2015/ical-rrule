@@ -1,6 +1,6 @@
 use std::num::NonZeroI64;
 
-use chrono::{DateTime, Datelike, Duration, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, Timelike, Utc};
 
 use crate::parser::{
     chrono_utils::{date_or_datetime_to_utc, RRuleDateOrDateTime},
@@ -45,6 +45,19 @@ impl From<DateTime<Utc>> for MaybeInvalidDateTime {
     }
 }
 
+impl Into<DateTime<Utc>> for MaybeInvalidDateTime {
+    fn into(self: MaybeInvalidDateTime) -> DateTime<Utc> {
+        DateTime::from_utc(
+            NaiveDate::from_ymd(self.year, self.month0 + 1, self.day).and_hms(
+                self.hour,
+                self.minute,
+                self.second,
+            ),
+            Utc,
+        )
+    }
+}
+
 pub fn add_month(mut datetime: MaybeInvalidDateTime, interval: u32) -> MaybeInvalidDateTime {
     datetime.month0 = (datetime.month0 + interval) % 12;
     datetime.year += interval as i32 / 12_i32;
@@ -68,23 +81,25 @@ impl Iterator for RRule {
 
         match self.rrule.freq {
             crate::parser::frequency::Frequency::Secondly => {
-                (self.dtstart + Duration::seconds(test.into())).into()
+                Some((Into::<DateTime<Utc>>::into(self.dtstart) + Duration::seconds(test.into())).into())
             }
             crate::parser::frequency::Frequency::Minutely => {
-                (self.dtstart + Duration::minutes(test.into())).into()
+                Some((Into::<DateTime<Utc>>::into(self.dtstart) + Duration::minutes(test.into())).into())
             }
             crate::parser::frequency::Frequency::Hourly => {
-                (self.dtstart + Duration::hours(test.into())).into()
+                Some((Into::<DateTime<Utc>>::into(self.dtstart) + Duration::hours(test.into())).into())
             }
             crate::parser::frequency::Frequency::Daily => {
-                (self.dtstart + Duration::days(test.into())).into()
+                Some((Into::<DateTime<Utc>>::into(self.dtstart) + Duration::days(test.into())).into())
             }
             crate::parser::frequency::Frequency::Weekly => {
-                (self.dtstart + Duration::weeks(test.into())).into()
+                Some((Into::<DateTime<Utc>>::into(self.dtstart) + Duration::weeks(test.into())).into())
             }
-            crate::parser::frequency::Frequency::Monthly => add_month(self.dtstart, self.rrule.interval.into()), // not easy maybe month doesnt have that day
-            crate::parser::frequency::Frequency::Yearly => add_year(self.dtstart, test2 as i32), //dtstart + Duration::years(test.into()), // not easy february is an asshole
-            // even worse as when by* is used this could probably create valid shit?
+            crate::parser::frequency::Frequency::Monthly => {
+                Some(add_month(self.dtstart, self.rrule.interval.into()))
+            } // not easy maybe month doesnt have that day
+            crate::parser::frequency::Frequency::Yearly => Some(add_year(self.dtstart, test2 as i32)), //dtstart + Duration::years(test.into()), // not easy february is an asshole
+                                                                                                 // even worse as when by* is used this could probably create valid shit?
         }
     }
 }
