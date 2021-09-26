@@ -79,18 +79,18 @@ jobs:
 
           //console.log(`${COVERAGE_SUMMARY}`)
 
-          await github.rest.issues.createComment({
+          console.log(await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: "```\n" + data + "```"
-          })
+          }))
 
-          await github.rest.checks.create({
+          console.log(await github.rest.checks.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
             name: "Changes detected",
             head_sha: context.sha,
             status: 'in_progress',
             //conclusion: "action_required",
-          }) 
+          }))
