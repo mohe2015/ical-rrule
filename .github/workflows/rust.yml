@@ -79,14 +79,14 @@ jobs:
 
           //console.log(`${COVERAGE_SUMMARY}`)
 
-          github.rest.issues.createComment({
+          await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: "```\n" + data + "```"
           })
 
-          await github.checks.create({
+          await github.rest.checks.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
             name: "Changes detected",
