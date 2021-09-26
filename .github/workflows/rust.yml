@@ -71,6 +71,7 @@ jobs:
       # https://docs.github.com/en/actions/learn-github-actions/contexts
       #env:
       #  COVERAGE_SUMMARY: ${{ steps.coverage.outputs.summary }}
+      # CANT USE CHECKS API as this is not a Github App (which we could probably easily create)
       with:
         script: |
           const fs = require('fs')
@@ -85,12 +86,12 @@ jobs:
             repo: context.repo.repo,
             body: "```\n" + data + "```"
           }))
-
-          console.log(await github.rest.checks.create({
+          /*
+          console.log(await github.rest.repos.createCommitStatus({
             owner: context.repo.owner,
             repo: context.repo.repo,
             name: "Changes detected",
-            head_sha: context.sha,
-            status: 'in_progress',
-            //conclusion: "action_required",
+            sha: context.sha,
+            state: 'success',
           }))
+          */
