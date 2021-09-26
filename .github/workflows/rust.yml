@@ -58,7 +58,7 @@ jobs:
     - name: coverage summary
       id: coverage
       # https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions
-      run: echo "::set-output name=summary::$(cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }})"
+      run: cargo cov -- report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} > coverage-result.txt
     - name: coverage html
       run: cargo cov -- show --format=html --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
     - name: Archive code coverage results
@@ -67,17 +67,20 @@ jobs:
         name: coverage
         path: target/debug/coverage
     - uses: actions/github-script@v5
-      env:
-        COVERAGE_SUMMARY: ${{ steps.coverage.outputs.summary }}
+      # https://github.com/actions/github-script
+      # https://docs.github.com/en/actions/learn-github-actions/contexts
+      #env:
+      #  COVERAGE_SUMMARY: ${{ steps.coverage.outputs.summary }}
       with:
         script: |
-          const { COVERAGE_SUMMARY } = process.env
+          //const { COVERAGE_SUMMARY } = process.env
+          const data = fs.readFileSync('coverage-result.txt', 'utf8')
 
-          console.log(`${COVERAGE_SUMMARY}`)
+          //console.log(`${COVERAGE_SUMMARY}`)
 
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `${COVERAGE_SUMMARY}`
+            body: `${data}`
           })
