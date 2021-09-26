@@ -54,13 +54,13 @@ jobs:
     - name: cargo profdata
       run: cargo profdata -- merge -sparse default.profraw -o default.profdata
     - name: coverage
-      run: cargo cov -- show --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+      run: cargo cov -- show --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
     - name: coverage summary
       id: coverage
       # https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions
-      run: cargo cov -- report --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} > coverage-result.txt
+      run: cargo cov -- report --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} > coverage-result.txt
     - name: coverage html
-      run: cargo cov -- show --format=html --ignore-filename-regex='/.cargo/registry' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+      run: cargo cov -- show --format=html --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object ${{ steps.build-test.outputs.binary }} --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
       with:
@@ -83,5 +83,5 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `${data}`
+            body: "```\n" + data + "```"
           })
