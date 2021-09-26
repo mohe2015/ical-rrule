@@ -73,9 +73,9 @@ jobs:
       #  COVERAGE_SUMMARY: ${{ steps.coverage.outputs.summary }}
       with:
         script: |
-          import {readFileSync} from 'fs';
+          const fs = require('fs')
           //const { COVERAGE_SUMMARY } = process.env
-          const data = readFileSync('coverage-result.txt', 'utf8')
+          const data = fs.readFileSync('coverage-result.txt', 'utf8')
 
           //console.log(`${COVERAGE_SUMMARY}`)
 
