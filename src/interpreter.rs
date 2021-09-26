@@ -21,12 +21,13 @@ impl Iterator for RecurRule {
 }
 */
 
+#[derive(Clone, Copy)]
 pub struct MaybeInvalidDateTime {
     second: u32,
     minute: u32,
     hour: u32,
     day: u32,
-    month: u32,
+    month0: u32,
     year: i32,
 }
 
@@ -38,24 +39,28 @@ impl From<DateTime<Utc>> for MaybeInvalidDateTime {
             hour: datetime.hour(),
             day: datetime.day(),
             // weeks
-            month: datetime.month(),
+            month0: datetime.month0(),
             year: datetime.year(),
         }
     }
 }
 
-pub fn add_month(datetime: MaybeInvalidDateTime) -> MaybeInvalidDateTime {
-    todo!()
+pub fn add_month(mut datetime: MaybeInvalidDateTime, interval: u32) -> MaybeInvalidDateTime {
+    datetime.month0 = (datetime.month0 + interval) % 12;
+    datetime.year += interval as i32 / 12_i32;
+    datetime
 }
 
-pub fn add_year(datetime: MaybeInvalidDateTime) -> MaybeInvalidDateTime {
-    todo!()
+pub fn add_year(mut datetime: MaybeInvalidDateTime, interval: i32) -> MaybeInvalidDateTime {
+    datetime.year = datetime.year + interval;
+    datetime
 }
 
 pub fn iterate(rrule: RRule /*, rdate: &str, exdate: &str*/) -> MaybeInvalidDateTime {
     let dtstart = date_or_datetime_to_utc(rrule.dtstart);
 
     let test: NonZeroI64 = rrule.rrule.interval.into();
+    let test2: u32 = rrule.rrule.interval.into();
 
     match rrule.rrule.freq {
         crate::parser::frequency::Frequency::Secondly => {
@@ -73,8 +78,8 @@ pub fn iterate(rrule: RRule /*, rdate: &str, exdate: &str*/) -> MaybeInvalidDate
         crate::parser::frequency::Frequency::Weekly => {
             (dtstart + Duration::weeks(test.into())).into()
         }
-        crate::parser::frequency::Frequency::Monthly => add_month(dtstart.into()), // not easy maybe month doesnt have that day
-        crate::parser::frequency::Frequency::Yearly => add_year(dtstart.into()), //dtstart + Duration::years(test.into()), // not easy february is an asshole
+        crate::parser::frequency::Frequency::Monthly => add_month(dtstart.into(), rrule.rrule.interval.into()), // not easy maybe month doesnt have that day
+        crate::parser::frequency::Frequency::Yearly => add_year(dtstart.into(), test2 as i32), //dtstart + Duration::years(test.into()), // not easy february is an asshole
                                                                                  // even worse as when by* is used this could probably create valid shit?
     }
 }
