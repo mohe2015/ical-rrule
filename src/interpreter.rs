@@ -5,18 +5,9 @@ use chrono::{DateTime, Datelike, Duration, NaiveDate, Timelike, Utc};
 use crate::parser::recur_rule::RecurRule;
 
 pub struct RRule {
-    rrule: RecurRule,
-    dtstart: MaybeInvalidDateTime,
+    pub(crate) rrule: RecurRule,
+    pub(crate) dtstart: MaybeInvalidDateTime,
 }
-/*
-impl Iterator for RecurRule {
-    type Item = DateTime<Utc>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-
-    }
-}
-*/
 
 #[derive(Clone, Copy)]
 pub struct MaybeInvalidDateTime {
