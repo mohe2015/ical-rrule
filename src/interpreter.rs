@@ -4,9 +4,19 @@ use chrono::{DateTime, Datelike, Duration, NaiveDate, Timelike, Utc};
 
 use crate::parser::recur_rule::RecurRule;
 
+#[derive(Clone)]
 pub struct RRule {
     pub(crate) rrule: RecurRule,
     pub(crate) dtstart: MaybeInvalidDateTime,
+}
+
+impl RRule {
+    fn bysecond(self: &RRule) -> Vec<u8> {
+        match &self.rrule.bysecond {
+            Some(v) => v.clone(),
+            None => vec![self.dtstart.second as u8],
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -93,4 +103,18 @@ impl Iterator for RRule {
 
         Some(new)
     }
+}
+
+fn complete_implementation(rrule: RRule) -> impl Iterator<Item = MaybeInvalidDateTime> {
+    rrule.clone().flat_map(move |f| {
+        rrule
+            .bysecond()
+            .iter()
+            .map(|s| {
+                let mut dupe = f;
+                dupe.second = *s as u32;
+                dupe
+            })
+            .collect::<Vec<_>>()
+    })
 }
