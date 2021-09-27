@@ -1,4 +1,4 @@
-use std::num::{NonZeroI64, NonZeroU8};
+use std::num::{NonZeroI64, NonZeroI8, NonZeroU8};
 
 use chrono::{DateTime, Datelike, Duration, NaiveDate, Timelike, Utc};
 
@@ -15,6 +15,27 @@ impl RRule {
         match &self.rrule.bymonth {
             Some(v) => v.clone(),
             None => vec![NonZeroU8::new((self.dtstart.month0 + 1).try_into().unwrap()).unwrap()],
+        }
+    }
+/* 
+    fn byweekno(self: &RRule) -> Vec<NonZeroI8> {
+        match &self.rrule.byweekno {
+            Some(v) => v.clone(),
+            None => vec![],
+        }
+    }
+*/
+    fn byhour(self: &RRule) -> Vec<u8> {
+        match &self.rrule.byhour {
+            Some(v) => v.clone(),
+            None => vec![self.dtstart.hour as u8],
+        }
+    }
+
+    fn byminute(self: &RRule) -> Vec<u8> {
+        match &self.rrule.byminute {
+            Some(v) => v.clone(),
+            None => vec![self.dtstart.minute as u8],
         }
     }
 
@@ -115,8 +136,9 @@ impl Iterator for RRule {
 pub fn complete_implementation<'a>(
     rrule: &'a RRule,
 ) -> impl Iterator<Item = MaybeInvalidDateTime> + 'a {
+    // BYMONTH
     let it1 = rrule
-        .clone()
+        .clone() // don't look here
         .map(|f| {
             if rrule.rrule.freq > Frequency::Monthly {
                 rrule
@@ -140,6 +162,7 @@ pub fn complete_implementation<'a>(
         })
         .flatten();
 
+    // BYWEEKNO
     let it2 = it1.flat_map(|f| {
         if rrule.rrule.freq > Frequency::Secondly {
             rrule
@@ -158,7 +181,67 @@ pub fn complete_implementation<'a>(
         }
     });
 
-    it2
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYHOUR    |Limit   |Limit   |Limit  |Expand |Expand|Expand |Expand|
+    let it3 = it2.flat_map(|f| {
+        if rrule.rrule.freq > Frequency::Hourly {
+            rrule
+                .byhour()
+                .iter()
+                .map(|s| {
+                    let mut dupe = f;
+                    dupe.hour = *s as u32;
+                    dupe
+                })
+                .collect::<Vec<_>>()
+        } else if rrule.byhour().contains(&(f.hour as u8)) {
+            vec![f]
+        } else {
+            vec![]
+        }
+    });
+
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYMINUTE  |Limit   |Limit   |Expand |Expand |Expand|Expand |Expand|
+    let it4 = it3.flat_map(|f| {
+        if rrule.rrule.freq > Frequency::Minutely {
+            rrule
+                .byminute()
+                .iter()
+                .map(|s| {
+                    let mut dupe = f;
+                    dupe.minute = *s as u32;
+                    dupe
+                })
+                .collect::<Vec<_>>()
+        } else if rrule.byminute().contains(&(f.minute as u8)) {
+            vec![f]
+        } else {
+            vec![]
+        }
+    });
+
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYSECOND  |Limit   |Expand  |Expand |Expand |Expand|Expand |Expand|
+    let it9 = it4.flat_map(|f| {
+        if rrule.rrule.freq > Frequency::Secondly {
+            rrule
+                .bysecond()
+                .iter()
+                .map(|s| {
+                    let mut dupe = f;
+                    dupe.second = *s as u32;
+                    dupe
+                })
+                .collect::<Vec<_>>()
+        } else if rrule.bysecond().contains(&(f.second as u8)) {
+            vec![f]
+        } else {
+            vec![]
+        }
+    });
+
+    it9
 }
 
 #[cfg(test)]
