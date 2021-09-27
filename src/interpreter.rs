@@ -14,7 +14,7 @@ impl RRule {
     fn bymonth(self: &RRule) -> Vec<NonZeroU8> {
         match &self.rrule.bymonth {
             Some(v) => v.clone(),
-            None => vec![NonZeroU8::new((self.dtstart.month0+1).try_into().unwrap()).unwrap()],
+            None => vec![NonZeroU8::new((self.dtstart.month0 + 1).try_into().unwrap()).unwrap()],
         }
     }
 
@@ -112,27 +112,35 @@ impl Iterator for RRule {
     }
 }
 
-pub fn complete_implementation<'a>(rrule: RRule) -> impl Iterator<Item = MaybeInvalidDateTime> + 'a {
-    let it1 = rrule.flat_map(move |f| {
-        if rrule.rrule.freq > Frequency::Monthly {
-            rrule
+pub fn complete_implementation<'a>(
+    rrule: &'a RRule,
+) -> impl Iterator<Item = MaybeInvalidDateTime> + 'a {
+    let it1 = rrule
+        .clone()
+        .map(|f| {
+            if rrule.rrule.freq > Frequency::Monthly {
+                rrule
+                    .bymonth()
+                    .iter()
+                    .map(|s| {
+                        let mut dupe = f;
+                        let tmp: u8 = (*s).into();
+                        dupe.month0 = tmp as u32;
+                        dupe
+                    })
+                    .collect::<Vec<_>>()
+            } else if rrule
                 .bymonth()
-                .iter()
-                .map(|s| {
-                    let mut dupe = f;
-                    let tmp: u8 = (*s).into();
-                    dupe.month0 = tmp as u32;
-                    dupe
-                })
-                .collect::<Vec<_>>()
-        } else if rrule.bymonth().contains(&NonZeroU8::new(f.month0 as u8).unwrap()) {
-            vec![f]
-        } else {
-            vec![]
-        }
-    });
+                .contains(&NonZeroU8::new(f.month0 as u8).unwrap())
+            {
+                vec![f]
+            } else {
+                vec![]
+            }
+        })
+        .flatten();
 
-    let it2 = it1.flat_map(move |f| {
+    let it2 = it1.flat_map(|f| {
         if rrule.rrule.freq > Frequency::Secondly {
             rrule
                 .bysecond()
@@ -196,7 +204,7 @@ mod tests {
             ..Default::default()
         };
         let rrule = RRule { dtstart, rrule };
-        for date in complete_implementation(rrule).take(10) {
+        for date in complete_implementation(&rrule).take(10) {
             println!("{}", Into::<DateTime<Utc>>::into(date));
         }
 
@@ -213,7 +221,7 @@ mod tests {
             ..Default::default()
         };
         let rrule = RRule { dtstart, rrule };
-        for date in complete_implementation(rrule).take(10) {
+        for date in complete_implementation(&rrule).take(10) {
             println!("{}", Into::<DateTime<Utc>>::into(date));
         }
     }
