@@ -92,19 +92,14 @@ mod tests {
     use nom::{error::ErrorKind, IResult};
     use rand::{Rng, RngCore};
 
-    use crate::{
-        interpreter::RRule,
-        parser::{
-            chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
-            constant_rrule,
-            frequency::{freq, Frequency},
-            iana_param, iana_token, other_param, param_value, paramtext,
-            recur_rule::{rrule, RecurRule},
-            rrulparams, Weekday, WeekdayNum,
-        },
+    use crate::parser::{
+        chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
+        constant_rrule,
+        frequency::{freq, Frequency},
+        iana_param, iana_token, other_param, param_value, paramtext,
+        recur_rule::{rrule, RecurRule},
+        rrulparams, Weekday, WeekdayNum,
     };
-
-    use super::chrono_utils::date_or_datetime_to_utc;
 
     #[test]
     fn it_works() {
@@ -289,23 +284,6 @@ mod tests {
     fn check(rule: RecurRule, to_string: &str) {
         assert_eq!(to_string, rule.to_string());
         assert_eq!(("", rule), rrule(to_string).unwrap());
-    }
-
-    #[test]
-    fn examples_interpreter() {
-        let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-            DateTime::from_utc(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0), Utc),
-        )))
-        .into();
-        let rrule = RecurRule {
-            freq: Frequency::Daily,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-            ..Default::default()
-        };
-        let rrule = RRule { dtstart, rrule };
-        for date in rrule.take(100) {
-            println!("{}", Into::<DateTime<Utc>>::into(date));
-        }
     }
 
     #[test]
@@ -1082,8 +1060,9 @@ mod tests {
             }
         );
 
+        // TODO FIXME probably tests run with all features enabled - maybe we can change that
         // to get coverage in arbitary impl because coverage is stupid and doesn't ignore it when the feature is disabled
-        for _ in 0..10240 {
+        for _ in 0..1024 {
             loop {
                 let mut data = vec![0; rand::thread_rng().gen_range(0..1024)];
                 rand::thread_rng().fill_bytes(&mut data);

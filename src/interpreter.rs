@@ -105,7 +105,7 @@ impl Iterator for RRule {
     }
 }
 
-fn complete_implementation(rrule: RRule) -> impl Iterator<Item = MaybeInvalidDateTime> {
+pub fn complete_implementation(rrule: RRule) -> impl Iterator<Item = MaybeInvalidDateTime> {
     rrule.clone().flat_map(move |f| {
         rrule
             .bysecond()
@@ -117,4 +117,40 @@ fn complete_implementation(rrule: RRule) -> impl Iterator<Item = MaybeInvalidDat
             })
             .collect::<Vec<_>>()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::num::NonZeroU64;
+
+    use chrono::{DateTime, NaiveDate, Utc};
+
+    use crate::parser::{
+        chrono_utils::{date_or_datetime_to_utc, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
+        frequency::Frequency,
+        recur_rule::RecurRule,
+    };
+
+    use super::{complete_implementation, RRule};
+
+    #[test]
+    fn examples_interpreter() {
+        let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+            DateTime::from_utc(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0), Utc),
+        )))
+        .into();
+        let rrule = RecurRule {
+            freq: Frequency::Daily,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            ..Default::default()
+        };
+        let rrule = RRule { dtstart, rrule };
+        for date in rrule.clone().take(100) {
+            println!("{}", Into::<DateTime<Utc>>::into(date));
+        }
+        println!("------------------------");
+        for date in complete_implementation(rrule).take(100) {
+            println!("{}", Into::<DateTime<Utc>>::into(date));
+        }
+    }
 }
