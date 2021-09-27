@@ -1,6 +1,6 @@
 use std::num::{NonZeroI64, NonZeroI8, NonZeroU8};
 
-use chrono::{DateTime, Datelike, Duration, NaiveDate, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc, format::Parsed};
 
 use crate::parser::{frequency::Frequency, recur_rule::RecurRule};
 
@@ -17,14 +17,14 @@ impl RRule {
             None => vec![NonZeroU8::new((self.dtstart.month0 + 1).try_into().unwrap()).unwrap()],
         }
     }
-/* 
+
     fn byweekno(self: &RRule) -> Vec<NonZeroI8> {
         match &self.rrule.byweekno {
             Some(v) => v.clone(),
             None => vec![],
         }
     }
-*/
+
     fn byhour(self: &RRule) -> Vec<u8> {
         match &self.rrule.byhour {
             Some(v) => v.clone(),
@@ -57,8 +57,8 @@ pub struct MaybeInvalidDateTime {
     year: i32,
 }
 
-impl From<DateTime<Utc>> for MaybeInvalidDateTime {
-    fn from(datetime: DateTime<Utc>) -> MaybeInvalidDateTime {
+impl<T: TimeZone> From<DateTime<T>> for MaybeInvalidDateTime {
+    fn from(datetime: DateTime<T>) -> MaybeInvalidDateTime {
         MaybeInvalidDateTime {
             second: datetime.second(),
             minute: datetime.minute(),
@@ -162,24 +162,32 @@ pub fn complete_implementation<'a>(
         })
         .flatten();
 
-    // BYWEEKNO
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYWEEKNO  |N/A     |N/A     |N/A    |N/A    |N/A   |N/A    |Expand|
     let it2 = it1.flat_map(|f| {
-        if rrule.rrule.freq > Frequency::Secondly {
+        if rrule.rrule.freq == Frequency::Yearly {
             rrule
-                .bysecond()
+                .byweekno()
                 .iter()
                 .map(|s| {
-                    let mut dupe = f;
-                    dupe.second = *s as u32;
-                    dupe
+                    let mut parsed = Parsed::new();
+                    parsed.set_year(f.year.into()).unwrap();
+                    parsed.set_isoweek(i8::from(*s) as i64).unwrap();
+                    parsed.to_datetime().unwrap().into()
                 })
                 .collect::<Vec<_>>()
-        } else if rrule.bysecond().contains(&(f.second as u8)) {
-            vec![f]
         } else {
-            vec![]
+            vec![f]
         }
     });
+
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYYEARDAY |Limit   |Limit   |Limit  |N/A    |N/A   |N/A    |Expand|
+
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYMONTHDAY|Limit   |Limit   |Limit  |Limit  |N/A   |Expand |Expand|
+
+    // TODO FIXME BYDAY
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYHOUR    |Limit   |Limit   |Limit  |Expand |Expand|Expand |Expand|
@@ -240,6 +248,8 @@ pub fn complete_implementation<'a>(
             vec![]
         }
     });
+
+    // TODO bysetpos
 
     it9
 }
