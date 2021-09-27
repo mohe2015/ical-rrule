@@ -4,7 +4,7 @@ use nom::{branch::alt, IResult};
 
 use super::enum_utils::enum_element;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum Frequency {
     Secondly,

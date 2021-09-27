@@ -2,7 +2,7 @@ use std::num::NonZeroI64;
 
 use chrono::{DateTime, Datelike, Duration, NaiveDate, Timelike, Utc};
 
-use crate::parser::recur_rule::RecurRule;
+use crate::parser::{frequency::Frequency, recur_rule::RecurRule};
 
 #[derive(Clone)]
 pub struct RRule {
@@ -107,15 +107,21 @@ impl Iterator for RRule {
 
 pub fn complete_implementation(rrule: RRule) -> impl Iterator<Item = MaybeInvalidDateTime> {
     rrule.clone().flat_map(move |f| {
-        rrule
-            .bysecond()
-            .iter()
-            .map(|s| {
-                let mut dupe = f;
-                dupe.second = *s as u32;
-                dupe
-            })
-            .collect::<Vec<_>>()
+        if rrule.rrule.freq > Frequency::Secondly {
+            rrule
+                .bysecond()
+                .iter()
+                .map(|s| {
+                    let mut dupe = f;
+                    dupe.second = *s as u32;
+                    dupe
+                })
+                .collect::<Vec<_>>()
+        } else if rrule.bysecond().contains(&(f.second as u8)) {
+            vec![f]
+        } else {
+            vec![]
+        }
     })
 }
 
@@ -145,11 +151,41 @@ mod tests {
             ..Default::default()
         };
         let rrule = RRule { dtstart, rrule };
-        for date in rrule.clone().take(100) {
+        for date in rrule.clone().take(10) {
             println!("{}", Into::<DateTime<Utc>>::into(date));
         }
+
         println!("------------------------");
-        for date in complete_implementation(rrule).take(100) {
+
+        let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+            DateTime::from_utc(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0), Utc),
+        )))
+        .into();
+        let rrule = RecurRule {
+            freq: Frequency::Daily,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            bysecond: Some(vec![1, 2]),
+            ..Default::default()
+        };
+        let rrule = RRule { dtstart, rrule };
+        for date in complete_implementation(rrule).take(10) {
+            println!("{}", Into::<DateTime<Utc>>::into(date));
+        }
+
+        println!("------------------------");
+
+        let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+            DateTime::from_utc(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0), Utc),
+        )))
+        .into();
+        let rrule = RecurRule {
+            freq: Frequency::Secondly,
+            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            bysecond: Some(vec![1, 2]),
+            ..Default::default()
+        };
+        let rrule = RRule { dtstart, rrule };
+        for date in complete_implementation(rrule).take(10) {
             println!("{}", Into::<DateTime<Utc>>::into(date));
         }
     }
