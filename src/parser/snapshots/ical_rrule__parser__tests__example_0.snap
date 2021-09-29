@@ -1,0 +1,17 @@
+---
+source: src/parser/mod.rs
+expression: "complete_implementation(&rrule).map(|v: DateTime<Utc>|\n                                        v.with_timezone(&tz)).collect::<Vec<DateTime<Tz>>>()"
+
+---
+[
+    1997-09-02T09:00:00EDT,
+    1997-09-03T09:00:00EDT,
+    1997-09-04T09:00:00EDT,
+    1997-09-05T09:00:00EDT,
+    1997-09-06T09:00:00EDT,
+    1997-09-07T09:00:00EDT,
+    1997-09-08T09:00:00EDT,
+    1997-09-09T09:00:00EDT,
+    1997-09-10T09:00:00EDT,
+    1997-09-11T09:00:00EDT,
+]

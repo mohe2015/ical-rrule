@@ -315,9 +315,9 @@ mod tests {
             rrule: rule,
         };
 
-        insta::assert_debug_snapshot!(
-            complete_implementation(&rrule).collect::<Vec<DateTime<Utc>>>()
-        );
+        insta::assert_debug_snapshot!(complete_implementation(&rrule)
+            .map(|v: DateTime<Utc>| v.with_timezone(&tz))
+            .collect::<Vec<DateTime<Tz>>>());
     }
     #[test]
     fn example_1() {

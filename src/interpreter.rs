@@ -29,14 +29,14 @@ impl RRule {
             None => vec![(self.dtstart.month0 + 1).try_into().unwrap()],
         }
     }
-
-    fn byweekno(self: &RRule) -> Vec<i8> {
-        match &self.rrule.byweekno {
-            Some(v) => v.clone(),
-            None => vec![],
+    /*
+        fn byweekno(self: &RRule) -> Vec<i8> {
+            match &self.rrule.byweekno {
+                Some(v) => v.clone(),
+                None => vec![],
+            }
         }
-    }
-
+    */
     fn byhour(self: &RRule) -> Vec<u8> {
         match &self.rrule.byhour {
             Some(v) => v.clone(),
@@ -148,6 +148,7 @@ impl Iterator for RRule {
 pub fn complete_implementation<'a>(
     rrule: &'a RRule,
 ) -> Box<dyn Iterator<Item = DateTime<Utc>> + 'a> {
+    let dtstart = rrule.dtstart;
     // TODO FIXME one of these probably removes all elements and therefore the iterator never yields an element
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
@@ -338,7 +339,9 @@ pub fn complete_implementation<'a>(
         }
     });
 
-    let result = bysecond.map(Into::<DateTime<Utc>>::into);
+    let result = std::iter::once(dtstart)
+        .chain(bysecond)
+        .map(Into::<DateTime<Utc>>::into);
 
     let the_final: Box<dyn Iterator<Item = DateTime<Utc>> + 'a> =
         if let RecurEnd::Count(c) = rrule.rrule.end {

@@ -7,7 +7,7 @@ rustup component add llvm-tools-preview
 cargo install cargo-binutils rustfilt cargo-audit grcov
 
 cargo fmt -- --check
-RUSTFLAGS="-D warnings" cargo clippy
+RUSTFLAGS="-D warnings -Z instrument-coverage" cargo clippy
 # https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/instrument-coverage.html
 binary=$(RUSTFLAGS="-D warnings -Z instrument-coverage" cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]")
 $binary
