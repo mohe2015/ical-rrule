@@ -8,6 +8,7 @@ cargo install cargo-binutils rustfilt cargo-audit grcov
 
 cargo fmt -- --check
 RUSTFLAGS="-D warnings -Z instrument-coverage" cargo clippy
+RUSTFLAGS="-D warnings -Z instrument-coverage" cargo clippy --tests
 # https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/instrument-coverage.html
 binary=$(RUSTFLAGS="-D warnings -Z instrument-coverage" cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]")
 $binary
