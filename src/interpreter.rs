@@ -155,21 +155,25 @@ pub fn complete_implementation<'a>(
     let it_bymonth = rrule
         .clone() // don't look here
         .map(|f| {
-            if rrule.rrule.freq > Frequency::Monthly {
-                rrule
-                    .bymonth()
-                    .iter()
-                    .map(|s| {
-                        let mut dupe = f;
-                        let tmp: u8 = *s;
-                        dupe.month0 = tmp as u32;
-                        dupe
-                    })
-                    .collect::<Vec<_>>()
-            } else if rrule.bymonth().contains(&(f.month0 as u8)) {
-                vec![f]
+            if rrule.rrule.bymonth.is_some() {
+                if rrule.rrule.freq > Frequency::Monthly {
+                    rrule
+                        .bymonth()
+                        .iter()
+                        .map(|s| {
+                            let mut dupe = f;
+                            let tmp: u8 = *s;
+                            dupe.month0 = tmp as u32;
+                            dupe
+                        })
+                        .collect::<Vec<_>>()
+                } else if rrule.bymonth().contains(&(f.month0 as u8)) {
+                    vec![f]
+                } else {
+                    vec![]
+                }
             } else {
-                vec![]
+                vec![f]
             }
         })
         .flatten();
@@ -178,6 +182,7 @@ pub fn complete_implementation<'a>(
     //    |BYWEEKNO  |N/A     |N/A     |N/A    |N/A    |N/A   |N/A    |Expand|
     /*
         let it2 = it1.flat_map(|f| {
+            if rrule.rrule.byweekno.is_some() {
             if rrule.rrule.freq == Frequency::Yearly {
                 rrule
                     .byweekno()
@@ -191,31 +196,38 @@ pub fn complete_implementation<'a>(
             } else {
                 vec![f]
             }
+            } else {
+                vec![f]
+            }
         });
     */
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYYEARDAY |Limit   |Limit   |Limit  |N/A    |N/A   |N/A    |Expand|
     let it_byyearday = it_bymonth.flat_map(|f| {
-        if rrule.rrule.freq == Frequency::Yearly {
-            // expand
-            rrule
-                .byyearday()
-                .iter()
-                .map(|s| {
-                    let mut parsed = Parsed::new();
-                    // TODO FIXME negative values
-                    parsed.set_ordinal((*s).into()).unwrap();
-                    // TODO FIXME skip out of range values
-                    parsed.to_datetime().unwrap().into()
-                })
-                .collect::<Vec<_>>()
-        } else if rrule.rrule.freq <= Frequency::Hourly
-            && !rrule
-                .byyearday()
-                .contains(&(DateTime::<Utc>::from(f).ordinal().try_into().unwrap()))
-        {
-            // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
-            vec![]
+        if rrule.rrule.byyearday.is_some() {
+            if rrule.rrule.freq == Frequency::Yearly {
+                // expand
+                rrule
+                    .byyearday()
+                    .iter()
+                    .map(|s| {
+                        let mut parsed = Parsed::new();
+                        // TODO FIXME negative values
+                        parsed.set_ordinal((*s).into()).unwrap();
+                        // TODO FIXME skip out of range values
+                        parsed.to_datetime().unwrap().into()
+                    })
+                    .collect::<Vec<_>>()
+            } else if rrule.rrule.freq <= Frequency::Hourly
+                && !rrule
+                    .byyearday()
+                    .contains(&(DateTime::<Utc>::from(f).ordinal().try_into().unwrap()))
+            {
+                // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
+                vec![]
+            } else {
+                vec![f]
+            }
         } else {
             vec![f]
         }
@@ -224,23 +236,27 @@ pub fn complete_implementation<'a>(
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYMONTHDAY|Limit   |Limit   |Limit  |Limit  |N/A   |Expand |Expand|
     let it_bymonthday = it_byyearday.flat_map(|f| {
-        if rrule.rrule.freq > Frequency::Hourly {
-            // expand
-            rrule
-                .bymonthday()
-                .iter()
-                .map(|s| {
-                    let mut dupe = f;
-                    // TODO FIXME negative values
-                    dupe.day = (*s).try_into().unwrap();
-                    dupe
-                })
-                .collect::<Vec<_>>()
-        } else if rrule.bymonthday().contains(&(f.day.try_into().unwrap())) {
-            // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
-            vec![f]
+        if rrule.rrule.bymonthday.is_some() {
+            if rrule.rrule.freq > Frequency::Hourly {
+                // expand
+                rrule
+                    .bymonthday()
+                    .iter()
+                    .map(|s| {
+                        let mut dupe = f;
+                        // TODO FIXME negative values
+                        dupe.day = (*s).try_into().unwrap();
+                        dupe
+                    })
+                    .collect::<Vec<_>>()
+            } else if rrule.bymonthday().contains(&(f.day.try_into().unwrap())) {
+                // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
+                vec![f]
+            } else {
+                vec![]
+            }
         } else {
-            vec![]
+            vec![f]
         }
     });
 
@@ -250,68 +266,80 @@ pub fn complete_implementation<'a>(
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYHOUR    |Limit   |Limit   |Limit  |Expand |Expand|Expand |Expand|
     let it_byhour = it_bymonthday.flat_map(|f| {
-        if rrule.rrule.freq > Frequency::Hourly {
-            // expand
-            rrule
-                .byhour()
-                .iter()
-                .map(|s| {
-                    let mut dupe = f;
-                    dupe.hour = *s as u32;
-                    dupe
-                })
-                .collect::<Vec<_>>()
-        } else if rrule.byhour().contains(&(f.hour as u8)) {
-            // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
-            vec![f]
+        if rrule.rrule.byhour.is_some() {
+            if rrule.rrule.freq > Frequency::Hourly {
+                // expand
+                rrule
+                    .byhour()
+                    .iter()
+                    .map(|s| {
+                        let mut dupe = f;
+                        dupe.hour = *s as u32;
+                        dupe
+                    })
+                    .collect::<Vec<_>>()
+            } else if rrule.byhour().contains(&(f.hour as u8)) {
+                // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
+                vec![f]
+            } else {
+                vec![]
+            }
         } else {
-            vec![]
+            vec![f]
         }
     });
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYMINUTE  |Limit   |Limit   |Expand |Expand |Expand|Expand |Expand|
     let it_byminute = it_byhour.flat_map(|f| {
-        if rrule.rrule.freq > Frequency::Minutely {
-            rrule
-                .byminute()
-                .iter()
-                .map(|s| {
-                    let mut dupe = f;
-                    dupe.minute = *s as u32;
-                    dupe
-                })
-                .collect::<Vec<_>>()
-        } else if rrule.byminute().contains(&(f.minute as u8)) {
-            vec![f]
+        if rrule.rrule.byminute.is_some() {
+            if rrule.rrule.freq > Frequency::Minutely {
+                rrule
+                    .byminute()
+                    .iter()
+                    .map(|s| {
+                        let mut dupe = f;
+                        dupe.minute = *s as u32;
+                        dupe
+                    })
+                    .collect::<Vec<_>>()
+            } else if rrule.byminute().contains(&(f.minute as u8)) {
+                vec![f]
+            } else {
+                vec![]
+            }
         } else {
-            vec![]
+            vec![f]
         }
     });
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYSECOND  |Limit   |Expand  |Expand |Expand |Expand|Expand |Expand|
 
-    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
-    //    |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
-
     it_byminute.flat_map(|f| {
-        if rrule.rrule.freq > Frequency::Secondly {
-            rrule
-                .bysecond()
-                .iter()
-                .map(|s| {
-                    let mut dupe = f;
-                    dupe.second = *s as u32;
-                    dupe
-                })
-                .collect::<Vec<_>>()
-        } else if rrule.bysecond().contains(&(f.second as u8)) {
-            vec![f]
+        if rrule.rrule.bysecond.is_some() {
+            if rrule.rrule.freq > Frequency::Secondly {
+                rrule
+                    .bysecond()
+                    .iter()
+                    .map(|s| {
+                        let mut dupe = f;
+                        dupe.second = *s as u32;
+                        dupe
+                    })
+                    .collect::<Vec<_>>()
+            } else if rrule.bysecond().contains(&(f.second as u8)) {
+                vec![f]
+            } else {
+                vec![]
+            }
         } else {
-            vec![]
+            vec![f]
         }
     })
+
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
 }
 
 #[cfg(test)]
