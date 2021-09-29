@@ -13,9 +13,9 @@ RUSTFLAGS="-D warnings -Z instrument-coverage" cargo clippy --tests
 binary=$(RUSTFLAGS="-D warnings -Z instrument-coverage" cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]")
 $binary
 cargo profdata -- merge -sparse default.profraw -o default.profdata
-cargo cov -- show --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object $binary --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
-cargo cov -- show --format=html --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object $binary --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+cargo cov -- show --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)|(target)' --instr-profile=default.profdata --object $binary --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
+cargo cov -- show --format=html --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)|(target)' --instr-profile=default.profdata --object $binary --output-dir=target/debug/coverage --show-instantiations --show-line-counts-or-regions --Xdemangler=rustfilt
 firefox target/debug/coverage/index.html
-cargo cov -- report --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)' --instr-profile=default.profdata --object $binary
+cargo cov -- report --use-color --ignore-filename-regex='(/.cargo/registry)|(/rustc/)|(target)' --instr-profile=default.profdata --object $binary
 
 cargo audit
