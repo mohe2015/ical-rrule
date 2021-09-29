@@ -371,6 +371,16 @@ pub fn complete_implementation<'a>(
 #[cfg(test)]
 mod tests {
 
+    use chrono::{DateTime, NaiveDate, Utc};
+
+    use crate::parser::{
+        chrono_utils::{date_or_datetime_to_utc, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
+        frequency::Frequency,
+        recur_rule::RecurRule,
+    };
+
+    use super::{complete_implementation, RRule};
+
     #[test]
     fn examples_interpreter() {
         let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
