@@ -91,14 +91,19 @@ mod tests {
     use nom::{error::ErrorKind, IResult};
     use rand::{Rng, RngCore};
 
-    use crate::parser::{
-        chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
-        constant_rrule,
-        frequency::{freq, Frequency},
-        iana_param, iana_token, other_param, param_value, paramtext,
-        recur_rule::{rrule, RecurRule},
-        rrulparams, Weekday, WeekdayNum,
+    use crate::{
+        interpreter::{complete_implementation, RRule},
+        parser::{
+            chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
+            constant_rrule,
+            frequency::{freq, Frequency},
+            iana_param, iana_token, other_param, param_value, paramtext,
+            recur_rule::{rrule, RecurRule},
+            rrulparams, Weekday, WeekdayNum,
+        },
     };
+
+    use super::chrono_utils::date_or_datetime_to_utc;
     /*
         #[test]
         fn it_works() {
@@ -280,9 +285,11 @@ mod tests {
             assert!(c != d);
         }
     */
-    fn check(rule: RecurRule, to_string: &str) {
+    fn check(rule: &RecurRule, to_string: &str) {
         assert_eq!(to_string, rule.to_string());
-        assert_eq!(("", rule), rrule(to_string).unwrap());
+        let result = rrule(to_string).unwrap();
+        assert_eq!("", result.0);
+        assert_eq!(rule, &result.1);
     }
 
     #[test]
@@ -296,7 +303,19 @@ mod tests {
             end: RecurEnd::Count(10),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=DAILY;COUNT=10");
+        check(&rule, "RRULE:FREQ=DAILY;COUNT=10");
+
+        let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+            DateTime::from_utc(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0), Utc),
+        )))
+        .into();
+        let rrule = RRule {
+            dtstart,
+            rrule: rule,
+        };
+        for date in complete_implementation(&rrule).take(10) {
+            println!("{}", Into::<DateTime<Utc>>::into(date));
+        }
     }
     #[test]
     fn example_1() {
@@ -309,7 +328,7 @@ mod tests {
             ))),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z");
+        check(&rule, "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z");
     }
     #[test]
     fn example_2() {
@@ -320,7 +339,7 @@ mod tests {
             interval: 2,
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=DAILY;INTERVAL=2");
+        check(&rule, "RRULE:FREQ=DAILY;INTERVAL=2");
     }
     #[test]
     fn example_3() {
@@ -332,7 +351,7 @@ mod tests {
             end: RecurEnd::Count(5),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5");
+        check(&rule, "RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5");
     }
     #[test]
     fn example_4() {
@@ -377,7 +396,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=YEARLY;UNTIL=20000131T140000Z;BYMONTH=1;BYDAY=SU,MO,TU,WE,TH,FR,SA",
         );
     }
@@ -391,7 +410,7 @@ mod tests {
             ))),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1");
+        check(&rule, "RRULE:FREQ=DAILY;UNTIL=20000131T140000Z;BYMONTH=1");
     }
     #[test]
     fn example_6() {
@@ -402,7 +421,7 @@ mod tests {
             end: RecurEnd::Count(10),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=WEEKLY;COUNT=10");
+        check(&rule, "RRULE:FREQ=WEEKLY;COUNT=10");
     }
     #[test]
     fn example_7() {
@@ -415,7 +434,7 @@ mod tests {
             ))),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=WEEKLY;UNTIL=19971224T000000Z");
+        check(&rule, "RRULE:FREQ=WEEKLY;UNTIL=19971224T000000Z");
     }
     #[test]
     fn example_8() {
@@ -427,7 +446,7 @@ mod tests {
             weekstart: Weekday::Sun,
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;WKST=SU");
+        check(&rule, "RRULE:FREQ=WEEKLY;INTERVAL=2;WKST=SU");
     }
     #[test]
     fn example_9() {
@@ -452,7 +471,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH",
         );
     }
@@ -474,7 +493,7 @@ mod tests {
             ]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH");
+        check(&rule, "RRULE:FREQ=WEEKLY;COUNT=10;WKST=SU;BYDAY=TU,TH");
     }
     #[test]
     fn example_11() {
@@ -504,7 +523,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR",
         );
     }
@@ -530,7 +549,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH",
         );
     }
@@ -547,7 +566,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYDAY=1FR");
+        check(&rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYDAY=1FR");
     }
     #[test]
     fn example_14() {
@@ -564,7 +583,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR");
+        check(&rule, "RRULE:FREQ=MONTHLY;UNTIL=19971224T000000Z;BYDAY=1FR");
     }
     #[test]
     fn example_15() {
@@ -587,7 +606,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=MONTHLY;INTERVAL=2;COUNT=10;BYDAY=1SU,-1SU",
         );
     }
@@ -604,7 +623,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;COUNT=6;BYDAY=-2MO");
+        check(&rule, "RRULE:FREQ=MONTHLY;COUNT=6;BYDAY=-2MO");
     }
     #[test]
     fn example_17() {
@@ -615,7 +634,7 @@ mod tests {
             bymonthday: Some(vec![-3]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;BYMONTHDAY=-3");
+        check(&rule, "RRULE:FREQ=MONTHLY;BYMONTHDAY=-3");
     }
     #[test]
     fn example_18() {
@@ -628,7 +647,7 @@ mod tests {
             bymonthday: Some(vec![2, 15]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15");
+        check(&rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15");
     }
     #[test]
     fn example_19() {
@@ -640,7 +659,7 @@ mod tests {
             bymonthday: Some(vec![1, -1]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1");
+        check(&rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1");
     }
     #[test]
     fn example_20() {
@@ -654,7 +673,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15",
         );
     }
@@ -671,7 +690,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=TU");
+        check(&rule, "RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=TU");
     }
     #[test]
     fn example_22() {
@@ -683,7 +702,7 @@ mod tests {
             bymonth: Some(vec![6, 7]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7");
+        check(&rule, "RRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7");
     }
     #[test]
     fn example_23() {
@@ -696,7 +715,7 @@ mod tests {
             bymonth: Some(vec![1, 2, 3]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3");
+        check(&rule, "RRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3");
     }
     #[test]
     fn example_24() {
@@ -710,7 +729,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=YEARLY;INTERVAL=3;COUNT=10;BYYEARDAY=1,100,200",
         );
     }
@@ -726,7 +745,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;BYDAY=20MO");
+        check(&rule, "RRULE:FREQ=YEARLY;BYDAY=20MO");
     }
     #[test]
     fn example_26() {
@@ -741,7 +760,7 @@ mod tests {
             byweekno: Some(vec![20]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO");
+        check(&rule, "RRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO");
     }
     #[test]
     fn example_27() {
@@ -756,7 +775,7 @@ mod tests {
             }]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=TH");
+        check(&rule, "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=TH");
     }
     #[test]
     fn example_28() {
@@ -791,7 +810,7 @@ mod tests {
             bymonthday: Some(vec![13]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13");
+        check(&rule, "RRULE:FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13");
     }
     #[test]
     fn example_30() {
@@ -807,7 +826,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13",
         );
     }
@@ -827,7 +846,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8",
         );
     }
@@ -855,7 +874,10 @@ mod tests {
             bysetpos: Some(vec![3]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3");
+        check(
+            &rule,
+            "RRULE:FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3",
+        );
     }
     #[test]
     fn example_33() {
@@ -888,7 +910,7 @@ mod tests {
             bysetpos: Some(vec![-2]),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2");
+        check(&rule, "RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2");
     }
     #[test]
     fn example_34() {
@@ -902,7 +924,7 @@ mod tests {
             ))),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T170000Z");
+        check(&rule, "RRULE:FREQ=HOURLY;INTERVAL=3;UNTIL=19970902T170000Z");
     }
     #[test]
     fn example_35() {
@@ -914,7 +936,7 @@ mod tests {
             end: RecurEnd::Count(6),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6");
+        check(&rule, "RRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6");
     }
     #[test]
     fn example_36() {
@@ -926,7 +948,7 @@ mod tests {
             end: RecurEnd::Count(4),
             ..Default::default()
         };
-        check(rule, "RRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4");
+        check(&rule, "RRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4");
     }
     #[test]
     fn example_37() {
@@ -939,7 +961,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40",
         );
     }
@@ -952,7 +974,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule,
+            &rule,
             "RRULE:FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16",
         );
     }
@@ -1049,7 +1071,7 @@ mod tests {
             ..Default::default()
         };
         check(
-            rule1.clone(),
+            &rule1,
             "RRULE:FREQ=SECONDLY;UNTIL=19971224T000000;BYSECOND=;BYDAY=MO",
         );
         format!("{:?}", rule1);
@@ -1060,7 +1082,7 @@ mod tests {
             ..Default::default()
         };
         assert!(rule != rule1);
-        check(rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224");
+        check(&rule, "RRULE:FREQ=SECONDLY;UNTIL=19971224");
 
         assert_eq!(
             (
