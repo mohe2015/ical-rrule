@@ -1,4 +1,4 @@
-use std::{fmt, num::NonZeroU64};
+use std::fmt;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Result, Unstructured};

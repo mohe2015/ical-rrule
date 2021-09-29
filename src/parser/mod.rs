@@ -85,7 +85,6 @@ pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
 
 #[cfg(test)]
 mod tests {
-    use std::num::{NonZeroI16, NonZeroI8, NonZeroU32, NonZeroU64, NonZeroU8};
 
     use arbitrary::{Arbitrary, Unstructured};
     use chrono::{DateTime, NaiveDate, Utc};
@@ -956,19 +955,13 @@ mod tests {
         let rule1 = RecurRule {
             freq: Frequency::Secondly,
             bysecond: Some(vec![]),
-            end: RecurEnd::Until(
-                RRuleDateOrDateTime::DateTime(
-                    RRuleDateTime::Unspecified(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0))
-                        .clone(),
-                )
-                .clone(),
-            )
-            .clone(),
+            end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Unspecified(
+                NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0),
+            ))),
             byday: Some(vec![WeekdayNum {
                 ordwk: None,
                 weekday: Weekday::Mon,
-            }
-            .clone()]),
+            }]),
             ..Default::default()
         };
         check(

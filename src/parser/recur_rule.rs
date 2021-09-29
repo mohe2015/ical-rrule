@@ -1,7 +1,4 @@
-use std::{
-    fmt,
-    num::{NonZeroI16, NonZeroI8, NonZeroU32, NonZeroU8},
-};
+use std::fmt;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::{Arbitrary, Result, Unstructured};

@@ -1,5 +1,3 @@
-use std::num::{NonZeroI16, NonZeroI64, NonZeroI8, NonZeroU8};
-
 use chrono::{format::Parsed, DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc};
 
 use crate::parser::{frequency::Frequency, recur_rule::RecurRule};
@@ -117,26 +115,26 @@ impl Iterator for RRule {
         //let dtstart = date_or_datetime_to_utc(rrule.dtstart);
 
         let test: i64 = self.rrule.interval.into();
-        let test2: u32 = self.rrule.interval.into();
+        let test2: u32 = self.rrule.interval;
 
         let new = match self.rrule.freq {
             crate::parser::frequency::Frequency::Secondly => {
-                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::seconds(test.into())).into()
+                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::seconds(test)).into()
             }
             crate::parser::frequency::Frequency::Minutely => {
-                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::minutes(test.into())).into()
+                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::minutes(test)).into()
             }
             crate::parser::frequency::Frequency::Hourly => {
-                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::hours(test.into())).into()
+                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::hours(test)).into()
             }
             crate::parser::frequency::Frequency::Daily => {
-                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::days(test.into())).into()
+                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::days(test)).into()
             }
             crate::parser::frequency::Frequency::Weekly => {
-                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::weeks(test.into())).into()
+                (Into::<DateTime<Utc>>::into(self.dtstart) + Duration::weeks(test)).into()
             }
             crate::parser::frequency::Frequency::Monthly => {
-                add_month(self.dtstart, self.rrule.interval.into())
+                add_month(self.dtstart, self.rrule.interval)
             } // not easy maybe month doesnt have that day
             crate::parser::frequency::Frequency::Yearly => add_year(self.dtstart, test2 as i32), //dtstart + Duration::years(test.into()), // not easy february is an asshole
                                                                                                  // even worse as when by* is used this could probably create valid shit?
@@ -161,7 +159,7 @@ pub fn complete_implementation<'a>(
                     .iter()
                     .map(|s| {
                         let mut dupe = f;
-                        let tmp: u8 = (*s).into();
+                        let tmp: u8 = *s;
                         dupe.month0 = tmp as u32;
                         dupe
                     })
@@ -204,7 +202,7 @@ pub fn complete_implementation<'a>(
                 .map(|s| {
                     let mut parsed = Parsed::new();
                     // TODO FIXME negative values
-                    parsed.set_ordinal(i16::from(*s).into()).unwrap();
+                    parsed.set_ordinal((*s).into()).unwrap();
                     // TODO FIXME skip out of range values
                     parsed.to_datetime().unwrap().into()
                 })
@@ -232,7 +230,7 @@ pub fn complete_implementation<'a>(
                 .map(|s| {
                     let mut dupe = f;
                     // TODO FIXME negative values
-                    dupe.day = i8::from(*s).try_into().unwrap();
+                    dupe.day = (*s).try_into().unwrap();
                     dupe
                 })
                 .collect::<Vec<_>>()
@@ -291,7 +289,11 @@ pub fn complete_implementation<'a>(
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYSECOND  |Limit   |Expand  |Expand |Expand |Expand|Expand |Expand|
-    let it_bysecond = it_byminute.flat_map(|f| {
+
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
+
+    it_byminute.flat_map(|f| {
         if rrule.rrule.freq > Frequency::Secondly {
             rrule
                 .bysecond()
@@ -307,17 +309,11 @@ pub fn complete_implementation<'a>(
         } else {
             vec![]
         }
-    });
-
-    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
-    //    |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
-
-    it_bysecond
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroU64;
 
     use chrono::{DateTime, NaiveDate, Utc};
 
@@ -341,7 +337,7 @@ mod tests {
             ..Default::default()
         };
         let rrule = RRule { dtstart, rrule };
-        for date in rrule.clone().take(10) {
+        for date in rrule.take(10) {
             println!("{}", Into::<DateTime<Utc>>::into(date));
         }
 
