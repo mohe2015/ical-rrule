@@ -87,19 +87,15 @@ pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
 mod tests {
 
     use chrono::{DateTime, NaiveDate, TimeZone, Utc};
-    use chrono_tz::{Tz, UTC};
-    use nom::{error::ErrorKind, IResult};
-    use rand::{Rng, RngCore};
+    use chrono_tz::Tz;
 
     use crate::{
         interpreter::{complete_implementation, RRule},
         parser::{
-            chrono_utils::{date, datetime, enddate, RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
-            constant_rrule,
-            frequency::{freq, Frequency},
-            iana_param, iana_token, other_param, param_value, paramtext,
+            chrono_utils::{RRuleDateOrDateTime, RRuleDateTime, RecurEnd},
+            frequency::Frequency,
             recur_rule::{rrule, RecurRule},
-            rrulparams, Weekday, WeekdayNum,
+            Weekday, WeekdayNum,
         },
     };
 
