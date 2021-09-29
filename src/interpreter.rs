@@ -1,6 +1,6 @@
-use std::num::{NonZeroI64, NonZeroI8, NonZeroU8};
+use std::num::{NonZeroI16, NonZeroI64, NonZeroI8, NonZeroU8};
 
-use chrono::{DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc, format::Parsed};
+use chrono::{format::Parsed, DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc};
 
 use crate::parser::{frequency::Frequency, recur_rule::RecurRule};
 
@@ -11,6 +11,20 @@ pub struct RRule {
 }
 
 impl RRule {
+    fn bymonthday(self: &RRule) -> Vec<NonZeroI8> {
+        match &self.rrule.bymonthday {
+            Some(v) => v.clone(),
+            None => vec![],
+        }
+    }
+
+    fn byyearday(self: &RRule) -> Vec<NonZeroI16> {
+        match &self.rrule.byyearday {
+            Some(v) => v.clone(),
+            None => vec![],
+        }
+    }
+
     fn bymonth(self: &RRule) -> Vec<NonZeroU8> {
         match &self.rrule.bymonth {
             Some(v) => v.clone(),
@@ -136,8 +150,9 @@ impl Iterator for RRule {
 pub fn complete_implementation<'a>(
     rrule: &'a RRule,
 ) -> impl Iterator<Item = MaybeInvalidDateTime> + 'a {
-    // BYMONTH
-    let it1 = rrule
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYMONTH   |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Expand|
+    let it_bymonth = rrule
         .clone() // don't look here
         .map(|f| {
             if rrule.rrule.freq > Frequency::Monthly {
@@ -164,35 +179,85 @@ pub fn complete_implementation<'a>(
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYWEEKNO  |N/A     |N/A     |N/A    |N/A    |N/A   |N/A    |Expand|
-    let it2 = it1.flat_map(|f| {
+    /*
+        let it2 = it1.flat_map(|f| {
+            if rrule.rrule.freq == Frequency::Yearly {
+                rrule
+                    .byweekno()
+                    .iter()
+                    .map(|s| {
+                        let mut parsed = Parsed::new();
+                        parsed.set_year(f.year.into()).unwrap();                    parsed.set_isoweek(i8::from(*s) as i64).unwrap();
+                        parsed.to_datetime().unwrap().into()
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                vec![f]
+            }
+        });
+    */
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYYEARDAY |Limit   |Limit   |Limit  |N/A    |N/A   |N/A    |Expand|
+    let it_byyearday = it_bymonth.flat_map(|f| {
         if rrule.rrule.freq == Frequency::Yearly {
+            // expand
             rrule
-                .byweekno()
+                .byyearday()
                 .iter()
                 .map(|s| {
                     let mut parsed = Parsed::new();
-                    parsed.set_year(f.year.into()).unwrap();
-                    parsed.set_isoweek(i8::from(*s) as i64).unwrap();
+                    // TODO FIXME negative values
+                    parsed.set_ordinal(i16::from(*s).into()).unwrap();
+                    // TODO FIXME skip out of range values
                     parsed.to_datetime().unwrap().into()
                 })
                 .collect::<Vec<_>>()
+        } else if rrule.rrule.freq <= Frequency::Hourly
+            && !rrule.byyearday().contains(
+                &NonZeroI16::new(DateTime::<Utc>::from(f).ordinal().try_into().unwrap()).unwrap(),
+            )
+        {
+            // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
+            vec![]
         } else {
             vec![f]
         }
     });
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
-    //    |BYYEARDAY |Limit   |Limit   |Limit  |N/A    |N/A   |N/A    |Expand|
+    //    |BYMONTHDAY|Limit   |Limit   |Limit  |Limit  |N/A   |Expand |Expand|
+    let it_bymonthday = it_byyearday.flat_map(|f| {
+        if rrule.rrule.freq > Frequency::Hourly {
+            // expand
+            rrule
+                .bymonthday()
+                .iter()
+                .map(|s| {
+                    let mut dupe = f;
+                    // TODO FIXME negative values
+                    dupe.day = i8::from(*s).try_into().unwrap();
+                    dupe
+                })
+                .collect::<Vec<_>>()
+        } else if rrule
+            .bymonthday()
+            .contains(&NonZeroI8::new(f.day.try_into().unwrap()).unwrap())
+        {
+            // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
+            vec![f]
+        } else {
+            vec![]
+        }
+    });
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
-    //    |BYMONTHDAY|Limit   |Limit   |Limit  |Limit  |N/A   |Expand |Expand|
-
-    // TODO FIXME BYDAY
+    //    |BYDAY     |Limit   |Limit   |Limit  |Limit  |Expand|Note 1 |Note 2|
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYHOUR    |Limit   |Limit   |Limit  |Expand |Expand|Expand |Expand|
-    let it3 = it2.flat_map(|f| {
+    let it_byhour = it_bymonthday.flat_map(|f| {
         if rrule.rrule.freq > Frequency::Hourly {
+            // expand
             rrule
                 .byhour()
                 .iter()
@@ -203,6 +268,7 @@ pub fn complete_implementation<'a>(
                 })
                 .collect::<Vec<_>>()
         } else if rrule.byhour().contains(&(f.hour as u8)) {
+            // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
             vec![f]
         } else {
             vec![]
@@ -211,7 +277,7 @@ pub fn complete_implementation<'a>(
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYMINUTE  |Limit   |Limit   |Expand |Expand |Expand|Expand |Expand|
-    let it4 = it3.flat_map(|f| {
+    let it_byminute = it_byhour.flat_map(|f| {
         if rrule.rrule.freq > Frequency::Minutely {
             rrule
                 .byminute()
@@ -231,7 +297,7 @@ pub fn complete_implementation<'a>(
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYSECOND  |Limit   |Expand  |Expand |Expand |Expand|Expand |Expand|
-    let it9 = it4.flat_map(|f| {
+    let it_bysecond = it_byminute.flat_map(|f| {
         if rrule.rrule.freq > Frequency::Secondly {
             rrule
                 .bysecond()
@@ -249,9 +315,10 @@ pub fn complete_implementation<'a>(
         }
     });
 
-    // TODO bysetpos
+    //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+    //    |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
 
-    it9
+    it_bysecond
 }
 
 #[cfg(test)]
