@@ -312,9 +312,10 @@ mod tests {
             dtstart,
             rrule: rule,
         };
-        for date in complete_implementation(&rrule).take(10) {
-            println!("{}", Into::<DateTime<Utc>>::into(date));
-        }
+
+        insta::assert_debug_snapshot!(complete_implementation(&rrule)
+            .take(10)
+            .collect::<Vec<DateTime<Utc>>>());
     }
     #[test]
     fn example_1() {

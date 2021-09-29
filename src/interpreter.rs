@@ -1,6 +1,6 @@
 use chrono::{format::Parsed, DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc};
 
-use crate::parser::{frequency::Frequency, recur_rule::RecurRule};
+use crate::parser::{chrono_utils::RecurEnd, frequency::Frequency, recur_rule::RecurRule};
 
 #[derive(Clone)]
 pub struct RRule {
@@ -147,7 +147,7 @@ impl Iterator for RRule {
 
 pub fn complete_implementation<'a>(
     rrule: &'a RRule,
-) -> impl Iterator<Item = MaybeInvalidDateTime> + 'a {
+) -> Box<dyn Iterator<Item = DateTime<Utc>> + 'a> {
     // TODO FIXME one of these probably removes all elements and therefore the iterator never yields an element
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
@@ -316,7 +316,7 @@ pub fn complete_implementation<'a>(
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYSECOND  |Limit   |Expand  |Expand |Expand |Expand|Expand |Expand|
 
-    it_byminute.flat_map(|f| {
+    let bysecond = it_byminute.flat_map(|f| {
         if rrule.rrule.bysecond.is_some() {
             if rrule.rrule.freq > Frequency::Secondly {
                 rrule
@@ -336,7 +336,18 @@ pub fn complete_implementation<'a>(
         } else {
             vec![f]
         }
-    })
+    });
+
+    let result = bysecond.map(Into::<DateTime<Utc>>::into);
+
+    let the_final: Box<dyn Iterator<Item = DateTime<Utc>> + 'a> =
+        if let RecurEnd::Count(c) = rrule.rrule.end {
+            Box::new(result.take(c.try_into().unwrap()))
+        } else {
+            Box::new(result)
+        };
+
+    the_final
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
