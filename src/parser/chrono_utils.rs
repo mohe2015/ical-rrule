@@ -12,7 +12,7 @@ use crate::parser::arbitrary_enums::Enum2;
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum RecurEnd {
     Until(RRuleDateOrDateTime),
-    Count(NonZeroU64),
+    Count(u64),
     Forever,
 }
 

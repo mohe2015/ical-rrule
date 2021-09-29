@@ -11,28 +11,28 @@ pub struct RRule {
 }
 
 impl RRule {
-    fn bymonthday(self: &RRule) -> Vec<NonZeroI8> {
+    fn bymonthday(self: &RRule) -> Vec<i8> {
         match &self.rrule.bymonthday {
             Some(v) => v.clone(),
             None => vec![],
         }
     }
 
-    fn byyearday(self: &RRule) -> Vec<NonZeroI16> {
+    fn byyearday(self: &RRule) -> Vec<i16> {
         match &self.rrule.byyearday {
             Some(v) => v.clone(),
             None => vec![],
         }
     }
 
-    fn bymonth(self: &RRule) -> Vec<NonZeroU8> {
+    fn bymonth(self: &RRule) -> Vec<u8> {
         match &self.rrule.bymonth {
             Some(v) => v.clone(),
-            None => vec![NonZeroU8::new((self.dtstart.month0 + 1).try_into().unwrap()).unwrap()],
+            None => vec![(self.dtstart.month0 + 1).try_into().unwrap()],
         }
     }
 
-    fn byweekno(self: &RRule) -> Vec<NonZeroI8> {
+    fn byweekno(self: &RRule) -> Vec<i8> {
         match &self.rrule.byweekno {
             Some(v) => v.clone(),
             None => vec![],
@@ -116,7 +116,7 @@ impl Iterator for RRule {
         // TODO FIXME honor until/count
         //let dtstart = date_or_datetime_to_utc(rrule.dtstart);
 
-        let test: NonZeroI64 = self.rrule.interval.into();
+        let test: i64 = self.rrule.interval.into();
         let test2: u32 = self.rrule.interval.into();
 
         let new = match self.rrule.freq {
@@ -166,10 +166,7 @@ pub fn complete_implementation<'a>(
                         dupe
                     })
                     .collect::<Vec<_>>()
-            } else if rrule
-                .bymonth()
-                .contains(&NonZeroU8::new(f.month0 as u8).unwrap())
-            {
+            } else if rrule.bymonth().contains(&(f.month0 as u8)) {
                 vec![f]
             } else {
                 vec![]
@@ -213,9 +210,9 @@ pub fn complete_implementation<'a>(
                 })
                 .collect::<Vec<_>>()
         } else if rrule.rrule.freq <= Frequency::Hourly
-            && !rrule.byyearday().contains(
-                &NonZeroI16::new(DateTime::<Utc>::from(f).ordinal().try_into().unwrap()).unwrap(),
-            )
+            && !rrule
+                .byyearday()
+                .contains(&(DateTime::<Utc>::from(f).ordinal().try_into().unwrap()))
         {
             // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
             vec![]
@@ -239,10 +236,7 @@ pub fn complete_implementation<'a>(
                     dupe
                 })
                 .collect::<Vec<_>>()
-        } else if rrule
-            .bymonthday()
-            .contains(&NonZeroI8::new(f.day.try_into().unwrap()).unwrap())
-        {
+        } else if rrule.bymonthday().contains(&(f.day.try_into().unwrap())) {
             // TODO FIXME what if no BYHOUR is set but freq is e.g. secondly? probably then this is wrong
             vec![f]
         } else {
@@ -343,7 +337,7 @@ mod tests {
         .into();
         let rrule = RecurRule {
             freq: Frequency::Daily,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            end: RecurEnd::Count(10),
             ..Default::default()
         };
         let rrule = RRule { dtstart, rrule };
@@ -359,7 +353,7 @@ mod tests {
         .into();
         let rrule = RecurRule {
             freq: Frequency::Daily,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            end: RecurEnd::Count(10),
             bysecond: Some(vec![1, 2]),
             ..Default::default()
         };
@@ -376,7 +370,7 @@ mod tests {
         .into();
         let rrule = RecurRule {
             freq: Frequency::Secondly,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            end: RecurEnd::Count(10),
             bysecond: Some(vec![1, 2]),
             ..Default::default()
         };

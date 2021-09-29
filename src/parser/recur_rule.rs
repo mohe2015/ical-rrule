@@ -30,16 +30,16 @@ use super::{
 pub struct RecurRule {
     pub(crate) freq: Frequency,
     pub(crate) end: RecurEnd,
-    pub(crate) interval: NonZeroU32,
+    pub(crate) interval: u32,
     pub(crate) bysecond: Option<Vec<u8>>,
     pub(crate) byminute: Option<Vec<u8>>,
     pub(crate) byhour: Option<Vec<u8>>,
     pub(crate) byday: Option<Vec<WeekdayNum>>,
-    pub(crate) bymonthday: Option<Vec<NonZeroI8>>,
-    pub(crate) byyearday: Option<Vec<NonZeroI16>>,
-    pub(crate) byweekno: Option<Vec<NonZeroI8>>,
-    pub(crate) bymonth: Option<Vec<NonZeroU8>>,
-    pub(crate) bysetpos: Option<Vec<NonZeroI16>>,
+    pub(crate) bymonthday: Option<Vec<i8>>,
+    pub(crate) byyearday: Option<Vec<i16>>,
+    pub(crate) byweekno: Option<Vec<i8>>,
+    pub(crate) bymonth: Option<Vec<u8>>,
+    pub(crate) bysetpos: Option<Vec<i16>>,
     pub(crate) weekstart: Weekday,
 }
 
@@ -48,7 +48,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
         let freq = Frequency::arbitrary(u)?;
         let end = RecurEnd::arbitrary(u)?;
-        let interval = NonZeroU32::arbitrary(u)?;
+        let interval = u32::arbitrary(u)?;
         let bysecond = match u.choose(&[Enum2::A, Enum2::B])? {
             Enum2::A => None,
             Enum2::B => {
@@ -113,7 +113,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                     if element == 0 {
                         element = 31;
                     }
-                    my_collection.push(NonZeroI8::new(element).unwrap());
+                    my_collection.push(element);
                 }
                 Some(my_collection)
             }
@@ -128,7 +128,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                     if element == 0 {
                         element = 366;
                     }
-                    my_collection.push(NonZeroI16::new(element).unwrap());
+                    my_collection.push(element);
                 }
                 Some(my_collection)
             }
@@ -140,7 +140,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                 let mut my_collection = Vec::with_capacity(len);
                 for _ in 0..len {
                     let element = u.int_in_range(1..=12)?;
-                    my_collection.push(NonZeroU8::new(element).unwrap());
+                    my_collection.push(element);
                 }
                 Some(my_collection)
             }
@@ -155,7 +155,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                     if element == 0 {
                         element = 366;
                     }
-                    my_collection.push(NonZeroI16::new(element).unwrap());
+                    my_collection.push(element);
                 }
                 Some(my_collection)
             }
@@ -170,7 +170,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
                     if element == 0 {
                         element = 53;
                     }
-                    my_collection.push(NonZeroI8::new(element).unwrap());
+                    my_collection.push(element);
                 }
                 Some(my_collection)
             }
@@ -284,7 +284,7 @@ impl fmt::Display for RecurRule {
             }
             None => "".to_string(),
         };
-        let intervalstring = if self.interval == NonZeroU32::new(1).unwrap() {
+        let intervalstring = if self.interval == 1 {
             "".to_string()
         } else {
             ";INTERVAL=".to_string() + &self.interval.to_string()
@@ -319,7 +319,7 @@ impl Default for RecurRule {
         RecurRule {
             freq: Frequency::Yearly, // TODO FIXME no default
             end: RecurEnd::Forever,
-            interval: NonZeroU32::new(1).unwrap(),
+            interval: 1,
             bysecond: None,
             byminute: None,
             byhour: None,
@@ -337,16 +337,16 @@ impl Default for RecurRule {
 enum RecurRulePart {
     Freq(Frequency),
     End(RecurEnd),
-    Interval(NonZeroU32),
+    Interval(u32),
     Bysecond(Vec<u8>),
     Byminute(Vec<u8>),
     Byhour(Vec<u8>),
     Byday(Vec<WeekdayNum>),
-    Bymonthday(Vec<NonZeroI8>),
-    Byyearday(Vec<NonZeroI16>),
-    Byweekno(Vec<NonZeroI8>),
-    Bymonth(Vec<NonZeroU8>),
-    Bysetpos(Vec<NonZeroI16>),
+    Bymonthday(Vec<i8>),
+    Byyearday(Vec<i16>),
+    Byweekno(Vec<i8>),
+    Bymonth(Vec<u8>),
+    Bysetpos(Vec<i16>),
     Weekstart(Weekday),
 }
 
@@ -356,18 +356,11 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         nom::combinator::map(preceded(tag("UNTIL="), enddate), |v| {
             RecurRulePart::End(RecurEnd::Until(v))
         }),
+        nom::combinator::map(preceded(tag("COUNT="), digits(1..)), |v| {
+            RecurRulePart::End(RecurEnd::Count(v))
+        }),
         nom::combinator::map(
-            preceded(
-                tag("COUNT="),
-                digits(std::num::NonZeroU64::new(1).unwrap()..),
-            ),
-            |v| RecurRulePart::End(RecurEnd::Count(v)),
-        ),
-        nom::combinator::map(
-            preceded(
-                tag("INTERVAL="),
-                digits(std::num::NonZeroU32::new(1).unwrap()..),
-            ),
+            preceded(tag("INTERVAL="), digits(1..)),
             RecurRulePart::Interval,
         ),
         nom::combinator::map(
@@ -400,56 +393,32 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         nom::combinator::map(
             preceded(
                 tag("BYMONTHDAY="),
-                separated_list0(
-                    tag(","),
-                    digits(
-                        std::num::NonZeroI8::new(-31).unwrap()
-                            ..=std::num::NonZeroI8::new(31).unwrap(),
-                    ),
-                ),
+                separated_list0(tag(","), digits(-31..=31)),
             ),
             RecurRulePart::Bymonthday,
         ),
         nom::combinator::map(
             preceded(
                 tag("BYYEARDAY="),
-                separated_list0(
-                    tag(","),
-                    digits(NonZeroI16::new(-366).unwrap()..=NonZeroI16::new(366).unwrap()),
-                ),
+                separated_list0(tag(","), digits(-366..=366)),
             ),
             RecurRulePart::Byyearday,
         ),
         nom::combinator::map(
             preceded(
                 tag("BYWEEKNO="),
-                separated_list0(
-                    tag(","),
-                    digits(NonZeroI8::new(-53).unwrap()..=NonZeroI8::new(53).unwrap()),
-                ),
+                separated_list0(tag(","), digits(-53..=53)),
             ),
             RecurRulePart::Byweekno,
         ),
         nom::combinator::map(
-            preceded(
-                tag("BYMONTH="),
-                separated_list0(
-                    tag(","),
-                    digits(
-                        std::num::NonZeroU8::new(1).unwrap()
-                            ..=std::num::NonZeroU8::new(12).unwrap(),
-                    ),
-                ),
-            ),
+            preceded(tag("BYMONTH="), separated_list0(tag(","), digits(1..=12))),
             RecurRulePart::Bymonth,
         ),
         nom::combinator::map(
             preceded(
                 tag("BYSETPOS="),
-                separated_list0(
-                    tag(","),
-                    digits(NonZeroI16::new(-366).unwrap()..=NonZeroI16::new(366).unwrap()),
-                ),
+                separated_list0(tag(","), digits(-366..=366)),
             ),
             RecurRulePart::Bysetpos,
         ),

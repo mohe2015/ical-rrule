@@ -294,7 +294,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Daily,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            end: RecurEnd::Count(10),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=DAILY;COUNT=10");
@@ -314,7 +314,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Daily,
-            interval: NonZeroU32::new(2).unwrap(),
+            interval: 2,
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=DAILY;INTERVAL=2");
@@ -323,8 +323,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Daily,
-            interval: NonZeroU32::new(10).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
+            interval: 10,
+            end: RecurEnd::Count(5),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=DAILY;INTERVAL=10;COUNT=5");
@@ -336,7 +336,7 @@ mod tests {
             end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
                 DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc),
             ))),
-            bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
+            bymonth: Some(vec![1]),
             byday: Some(vec![
                 WeekdayNum {
                     ordwk: None,
@@ -376,7 +376,7 @@ mod tests {
 
         let rule = RecurRule {
             freq: Frequency::Daily,
-            bymonth: Some(vec![NonZeroU8::new(1).unwrap()]),
+            bymonth: Some(vec![1]),
             end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
                 DateTime::from_utc(NaiveDate::from_ymd(2000, 1, 31).and_hms(14, 0, 0), Utc),
             ))),
@@ -388,7 +388,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Weekly,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            end: RecurEnd::Count(10),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=WEEKLY;COUNT=10");
@@ -408,7 +408,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Weekly,
-            interval: NonZeroU32::new(2).unwrap(),
+            interval: 2,
             weekstart: Weekday::Sun,
             ..Default::default()
         };
@@ -441,7 +441,7 @@ mod tests {
 
         let rule = RecurRule {
             freq: Frequency::Weekly,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            end: RecurEnd::Count(10),
             weekstart: Weekday::Sun,
             byday: Some(vec![
                 WeekdayNum {
@@ -461,7 +461,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970901T090000
         let rule = RecurRule {
             freq: Frequency::Weekly,
-            interval: NonZeroU32::new(2).unwrap(),
+            interval: 2,
             end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
                 DateTime::from_utc(NaiveDate::from_ymd(1997, 12, 24).and_hms(0, 0, 0), Utc),
             ))),
@@ -491,8 +491,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Weekly,
-            interval: NonZeroU32::new(2).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(8).unwrap()),
+            interval: 2,
+            end: RecurEnd::Count(8),
             weekstart: Weekday::Sun,
             byday: Some(vec![
                 WeekdayNum {
@@ -515,7 +515,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970905T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            end: RecurEnd::Count(10),
             byday: Some(vec![WeekdayNum {
                 ordwk: Some(1),
                 weekday: Weekday::Fri,
@@ -543,8 +543,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970907T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            interval: NonZeroU32::new(2).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
+            interval: 2,
+            end: RecurEnd::Count(10),
             byday: Some(vec![
                 WeekdayNum {
                     ordwk: Some(1),
@@ -566,7 +566,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970922T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
+            end: RecurEnd::Count(6),
             byday: Some(vec![WeekdayNum {
                 ordwk: Some(-2),
                 weekday: Weekday::Mon,
@@ -579,7 +579,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970928T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            bymonthday: Some(vec![NonZeroI8::new(-3).unwrap()]),
+            bymonthday: Some(vec![-3]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MONTHLY;BYMONTHDAY=-3");
@@ -589,11 +589,8 @@ mod tests {
         // RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-            bymonthday: Some(vec![
-                NonZeroI8::new(2).unwrap(),
-                NonZeroI8::new(15).unwrap(),
-            ]),
+            end: RecurEnd::Count(10),
+            bymonthday: Some(vec![2, 15]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15");
@@ -602,11 +599,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970930T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-            bymonthday: Some(vec![
-                NonZeroI8::new(1).unwrap(),
-                NonZeroI8::new(-1).unwrap(),
-            ]),
+            end: RecurEnd::Count(10),
+            bymonthday: Some(vec![1, -1]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1");
@@ -615,16 +609,9 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970910T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            interval: NonZeroU32::new(18).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-            bymonthday: Some(vec![
-                NonZeroI8::new(10).unwrap(),
-                NonZeroI8::new(11).unwrap(),
-                NonZeroI8::new(12).unwrap(),
-                NonZeroI8::new(13).unwrap(),
-                NonZeroI8::new(14).unwrap(),
-                NonZeroI8::new(15).unwrap(),
-            ]),
+            interval: 18,
+            end: RecurEnd::Count(10),
+            bymonthday: Some(vec![10, 11, 12, 13, 14, 15]),
             ..Default::default()
         };
         check(
@@ -636,7 +623,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            interval: NonZeroU32::new(2).unwrap(),
+            interval: 2,
             byday: Some(vec![WeekdayNum {
                 ordwk: None,
                 weekday: Weekday::Tue,
@@ -649,8 +636,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970610T090000
         let rule = RecurRule {
             freq: Frequency::Yearly,
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-            bymonth: Some(vec![NonZeroU8::new(6).unwrap(), NonZeroU8::new(7).unwrap()]),
+            end: RecurEnd::Count(10),
+            bymonth: Some(vec![6, 7]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=YEARLY;COUNT=10;BYMONTH=6,7");
@@ -659,13 +646,9 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970310T090000
         let rule = RecurRule {
             freq: Frequency::Yearly,
-            interval: NonZeroU32::new(2).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-            bymonth: Some(vec![
-                NonZeroU8::new(1).unwrap(),
-                NonZeroU8::new(2).unwrap(),
-                NonZeroU8::new(3).unwrap(),
-            ]),
+            interval: 2,
+            end: RecurEnd::Count(10),
+            bymonth: Some(vec![1, 2, 3]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=YEARLY;INTERVAL=2;COUNT=10;BYMONTH=1,2,3");
@@ -674,13 +657,9 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970101T090000
         let rule = RecurRule {
             freq: Frequency::Yearly,
-            interval: NonZeroU32::new(3).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(10).unwrap()),
-            byyearday: Some(vec![
-                NonZeroI16::new(1).unwrap(),
-                NonZeroI16::new(100).unwrap(),
-                NonZeroI16::new(200).unwrap(),
-            ]),
+            interval: 3,
+            end: RecurEnd::Count(10),
+            byyearday: Some(vec![1, 100, 200]),
             ..Default::default()
         };
         check(
@@ -708,7 +687,7 @@ mod tests {
                 ordwk: None,
                 weekday: Weekday::Mon,
             }]),
-            byweekno: Some(vec![NonZeroI8::new(20).unwrap()]),
+            byweekno: Some(vec![20]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO");
@@ -717,7 +696,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970313T090000
         let rule = RecurRule {
             freq: Frequency::Yearly,
-            bymonth: Some(vec![NonZeroU8::new(3).unwrap()]),
+            bymonth: Some(vec![3]),
             byday: Some(vec![WeekdayNum {
                 ordwk: None,
                 weekday: Weekday::Thu,
@@ -730,11 +709,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970605T090000
         let rule = RecurRule {
             freq: Frequency::Yearly,
-            bymonth: Some(vec![
-                NonZeroU8::new(6).unwrap(),
-                NonZeroU8::new(7).unwrap(),
-                NonZeroU8::new(8).unwrap(),
-            ]),
+            bymonth: Some(vec![6, 7, 8]),
             byday: Some(vec![WeekdayNum {
                 ordwk: None,
                 weekday: Weekday::Thu,
@@ -756,7 +731,7 @@ mod tests {
                 ordwk: None,
                 weekday: Weekday::Fri,
             }]),
-            bymonthday: Some(vec![NonZeroI8::new(13).unwrap()]),
+            bymonthday: Some(vec![13]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13");
@@ -769,15 +744,7 @@ mod tests {
                 ordwk: None,
                 weekday: Weekday::Sat,
             }]),
-            bymonthday: Some(vec![
-                NonZeroI8::new(7).unwrap(),
-                NonZeroI8::new(8).unwrap(),
-                NonZeroI8::new(9).unwrap(),
-                NonZeroI8::new(10).unwrap(),
-                NonZeroI8::new(11).unwrap(),
-                NonZeroI8::new(12).unwrap(),
-                NonZeroI8::new(13).unwrap(),
-            ]),
+            bymonthday: Some(vec![7, 8, 9, 10, 11, 12, 13]),
             ..Default::default()
         };
         check(
@@ -789,21 +756,13 @@ mod tests {
         // DTSTART;TZID=America/New_York:19961105T090000
         let rule = RecurRule {
             freq: Frequency::Yearly,
-            interval: NonZeroU32::new(4).unwrap(),
-            bymonth: Some(vec![NonZeroU8::new(11).unwrap()]),
+            interval: 4,
+            bymonth: Some(vec![11]),
             byday: Some(vec![WeekdayNum {
                 ordwk: None,
                 weekday: Weekday::Tue,
             }]),
-            bymonthday: Some(vec![
-                NonZeroI8::new(2).unwrap(),
-                NonZeroI8::new(3).unwrap(),
-                NonZeroI8::new(4).unwrap(),
-                NonZeroI8::new(5).unwrap(),
-                NonZeroI8::new(6).unwrap(),
-                NonZeroI8::new(7).unwrap(),
-                NonZeroI8::new(8).unwrap(),
-            ]),
+            bymonthday: Some(vec![2, 3, 4, 5, 6, 7, 8]),
             ..Default::default()
         };
         check(
@@ -815,7 +774,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970904T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            end: RecurEnd::Count(NonZeroU64::new(3).unwrap()),
+            end: RecurEnd::Count(3),
             byday: Some(vec![
                 WeekdayNum {
                     ordwk: None,
@@ -830,7 +789,7 @@ mod tests {
                     weekday: Weekday::Thu,
                 },
             ]),
-            bysetpos: Some(vec![NonZeroI16::new(3).unwrap()]),
+            bysetpos: Some(vec![3]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3");
@@ -861,7 +820,7 @@ mod tests {
                     weekday: Weekday::Fri,
                 },
             ]),
-            bysetpos: Some(vec![NonZeroI16::new(-2).unwrap()]),
+            bysetpos: Some(vec![-2]),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2");
@@ -870,7 +829,7 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Hourly,
-            interval: NonZeroU32::new(3).unwrap(),
+            interval: 3,
             end: RecurEnd::Until(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
                 DateTime::from_utc(NaiveDate::from_ymd(1997, 9, 2).and_hms(17, 0, 0), Utc),
             ))),
@@ -882,8 +841,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Minutely,
-            interval: NonZeroU32::new(15).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(6).unwrap()),
+            interval: 15,
+            end: RecurEnd::Count(6),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MINUTELY;INTERVAL=15;COUNT=6");
@@ -892,8 +851,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Minutely,
-            interval: NonZeroU32::new(90).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
+            interval: 90,
+            end: RecurEnd::Count(4),
             ..Default::default()
         };
         check(rule, "RRULE:FREQ=MINUTELY;INTERVAL=90;COUNT=4");
@@ -913,7 +872,7 @@ mod tests {
 
         let rule = RecurRule {
             freq: Frequency::Minutely,
-            interval: NonZeroU32::new(20).unwrap(),
+            interval: 20,
             byhour: Some(vec![9, 10, 11, 12, 13, 14, 15, 16]),
             ..Default::default()
         };
@@ -926,8 +885,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:19970805T090000
         let rule = RecurRule {
             freq: Frequency::Weekly,
-            interval: NonZeroU32::new(2).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
+            interval: 2,
+            end: RecurEnd::Count(4),
             byday: Some(vec![
                 WeekdayNum {
                     ordwk: None,
@@ -952,8 +911,8 @@ mod tests {
 
         let rule = RecurRule {
             freq: Frequency::Weekly,
-            interval: NonZeroU32::new(2).unwrap(),
-            end: RecurEnd::Count(NonZeroU64::new(4).unwrap()),
+            interval: 2,
+            end: RecurEnd::Count(4),
             byday: Some(vec![
                 WeekdayNum {
                     ordwk: None,
@@ -980,11 +939,8 @@ mod tests {
         // DTSTART;TZID=America/New_York:20070115T090000
         let rule = RecurRule {
             freq: Frequency::Monthly,
-            end: RecurEnd::Count(NonZeroU64::new(5).unwrap()),
-            bymonthday: Some(vec![
-                NonZeroI8::new(15).unwrap(),
-                NonZeroI8::new(30).unwrap(),
-            ]),
+            end: RecurEnd::Count(5),
+            bymonthday: Some(vec![15, 30]),
             ..Default::default()
         };
         assert_eq!(
