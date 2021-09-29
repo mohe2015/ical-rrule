@@ -86,7 +86,6 @@ pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
 #[cfg(test)]
 mod tests {
 
-    use arbitrary::{Arbitrary, Unstructured};
     use chrono::{DateTime, NaiveDate, Utc};
     use nom::{error::ErrorKind, IResult};
     use rand::{Rng, RngCore};

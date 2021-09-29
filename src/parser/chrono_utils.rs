@@ -5,8 +5,6 @@ use arbitrary::{Arbitrary, Result, Unstructured};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use nom::{branch::alt, bytes::complete::take, error::ErrorKind, IResult};
 
-use crate::parser::arbitrary_enums::Enum2;
-
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
@@ -75,6 +73,9 @@ pub fn date_or_datetime_to_utc(date_or_date_time: RRuleDateOrDateTime) -> DateTi
         RRuleDateOrDateTime::DateTime(v) => datetime_to_utc(v),
     }
 }
+
+#[cfg(feature = "arbitrary")]
+use crate::parser::arbitrary_enums::Enum2;
 
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {

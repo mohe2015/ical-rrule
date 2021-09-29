@@ -11,10 +11,7 @@ use nom::{
     IResult,
 };
 
-use crate::{
-    parser::arbitrary_enums::Enum2,
-    weekday::{weekday, Weekday},
-};
+use crate::weekday::{weekday, Weekday};
 
 use super::{
     chrono_utils::{enddate, RecurEnd},
@@ -39,6 +36,9 @@ pub struct RecurRule {
     pub(crate) bysetpos: Option<Vec<i16>>,
     pub(crate) weekstart: Weekday,
 }
+
+#[cfg(feature = "arbitrary")]
+use crate::parser::arbitrary_enums::Enum2;
 
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RecurRule {
