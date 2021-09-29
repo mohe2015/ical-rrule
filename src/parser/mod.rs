@@ -294,10 +294,7 @@ mod tests {
 
     #[test]
     fn example_0() {
-        // All examples assume the Eastern United States time zone.
-
         // Daily for 10 occurrences:
-        // DTSTART;TZID=America/New_York:19970902T090000
         let rule = RecurRule {
             freq: Frequency::Daily,
             end: RecurEnd::Count(10),
@@ -314,7 +311,6 @@ mod tests {
             dtstart,
             rrule: rule,
         };
-
         insta::assert_debug_snapshot!(complete_implementation(&rrule)
             .map(|v: DateTime<Utc>| v.with_timezone(&tz))
             .collect::<Vec<DateTime<Tz>>>());
@@ -331,6 +327,19 @@ mod tests {
             ..Default::default()
         };
         check(&rule, "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z");
+
+        let tz: Tz = "America/New_York".parse().unwrap();
+        let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
+            tz.ymd(1997, 9, 2).and_hms(9, 0, 0).with_timezone(&Utc),
+        )))
+        .into();
+        let rrule = RRule {
+            dtstart,
+            rrule: rule,
+        };
+        insta::assert_debug_snapshot!(complete_implementation(&rrule)
+            .map(|v: DateTime<Utc>| v.with_timezone(&tz))
+            .collect::<Vec<DateTime<Tz>>>());
     }
     #[test]
     fn example_2() {

@@ -1,6 +1,10 @@
 use chrono::{format::Parsed, DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc};
 
-use crate::parser::{chrono_utils::RecurEnd, frequency::Frequency, recur_rule::RecurRule};
+use crate::parser::{
+    chrono_utils::{date_or_datetime_to_utc, RecurEnd},
+    frequency::Frequency,
+    recur_rule::RecurRule,
+};
 
 #[derive(Clone)]
 pub struct RRule {
@@ -350,7 +354,15 @@ pub fn complete_implementation<'a>(
             Box::new(result)
         };
 
-    the_final
+    let the_final_final: Box<dyn Iterator<Item = DateTime<Utc>> + 'a> =
+        if let RecurEnd::Until(c) = rrule.rrule.end {
+            let the_end = date_or_datetime_to_utc(c);
+            Box::new(the_final.take_while(move |e| *e <= the_end))
+        } else {
+            Box::new(the_final)
+        };
+
+    the_final_final
 
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
