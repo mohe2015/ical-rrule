@@ -148,6 +148,8 @@ impl Iterator for RRule {
 pub fn complete_implementation<'a>(
     rrule: &'a RRule,
 ) -> impl Iterator<Item = MaybeInvalidDateTime> + 'a {
+    // TODO FIXME one of these probably removes all elements and therefore the iterator never yields an element
+
     //    |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
     //    |BYMONTH   |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Expand|
     let it_bymonth = rrule
