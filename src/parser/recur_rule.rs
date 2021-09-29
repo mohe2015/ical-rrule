@@ -45,7 +45,7 @@ impl<'a> Arbitrary<'a> for RecurRule {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
         let freq = Frequency::arbitrary(u)?;
         let end = RecurEnd::arbitrary(u)?;
-        let interval = u32::arbitrary(u)?;
+        let interval = u.int_in_range(1..=u32::MAX - 1)?;
         let bysecond = match u.choose(&[Enum2::A, Enum2::B])? {
             Enum2::A => None,
             Enum2::B => {
@@ -353,7 +353,7 @@ fn recur_rule_part(input: &str) -> IResult<&str, RecurRulePart> {
         nom::combinator::map(preceded(tag("UNTIL="), enddate), |v| {
             RecurRulePart::End(RecurEnd::Until(v))
         }),
-        nom::combinator::map(preceded(tag("COUNT="), digits(1..)), |v| {
+        nom::combinator::map(preceded(tag("COUNT="), digits(0..)), |v| {
             RecurRulePart::End(RecurEnd::Count(v))
         }),
         nom::combinator::map(

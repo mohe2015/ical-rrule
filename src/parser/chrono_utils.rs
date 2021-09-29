@@ -7,7 +7,6 @@ use nom::{branch::alt, bytes::complete::take, error::ErrorKind, IResult};
 
 // The UNTIL or COUNT rule parts are OPTIONAL, but they MUST NOT occur in the same 'recur'.
 #[derive(Copy, Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum RecurEnd {
     Until(RRuleDateOrDateTime),
     Count(u64),
@@ -75,7 +74,18 @@ pub fn date_or_datetime_to_utc(date_or_date_time: RRuleDateOrDateTime) -> DateTi
 }
 
 #[cfg(feature = "arbitrary")]
-use crate::parser::arbitrary_enums::Enum2;
+use crate::parser::arbitrary_enums::{Enum2, Enum3};
+
+#[cfg(feature = "arbitrary")]
+impl<'a> Arbitrary<'a> for RecurEnd {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        match u.choose(&[Enum3::A, Enum3::B, Enum3::C])? {
+            Enum3::A => Ok(RecurEnd::Until(RRuleDateOrDateTime::arbitrary(u)?)),
+            Enum3::B => Ok(RecurEnd::Count(u.int_in_range(0..=u64::MAX - 1)?)),
+            Enum3::C => Ok(RecurEnd::Forever),
+        }
+    }
+}
 
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for RRuleDateOrDateTime {
