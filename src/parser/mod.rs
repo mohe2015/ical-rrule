@@ -86,7 +86,8 @@ pub fn digits<T: RangeBounds<U>, U: FromStr + PartialOrd>(
 #[cfg(test)]
 mod tests {
 
-    use chrono::{DateTime, NaiveDate, Utc};
+    use chrono::{DateTime, NaiveDate, TimeZone, Utc};
+    use chrono_tz::{Tz, UTC};
     use nom::{error::ErrorKind, IResult};
     use rand::{Rng, RngCore};
 
@@ -304,8 +305,9 @@ mod tests {
         };
         check(&rule, "RRULE:FREQ=DAILY;COUNT=10");
 
+        let tz: Tz = "America/New_York".parse().unwrap();
         let dtstart = date_or_datetime_to_utc(RRuleDateOrDateTime::DateTime(RRuleDateTime::Utc(
-            DateTime::from_utc(NaiveDate::from_ymd(2021, 9, 20).and_hms(0, 0, 0), Utc),
+            tz.ymd(1997, 9, 2).and_hms(9, 0, 0).with_timezone(&Utc),
         )))
         .into();
         let rrule = RRule {
@@ -313,9 +315,9 @@ mod tests {
             rrule: rule,
         };
 
-        insta::assert_debug_snapshot!(complete_implementation(&rrule)
-            .take(10)
-            .collect::<Vec<DateTime<Utc>>>());
+        insta::assert_debug_snapshot!(
+            complete_implementation(&rrule).collect::<Vec<DateTime<Utc>>>()
+        );
     }
     #[test]
     fn example_1() {
